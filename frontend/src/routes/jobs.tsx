@@ -4,7 +4,7 @@ import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { useAuth } from "@/lib/auth-context";
 import { api } from "@/lib/api";
 import { naira } from "@/lib/format";
-import { MapPin, Lock, Sparkles, Phone, CheckCircle, Search, X } from "lucide-react";
+import { MapPin, Lock, Sparkles, Phone, CheckCircle, Search, X, Mic } from "lucide-react";
 import { toast } from "sonner";
 import { EscrowBadge } from "@/components/EscrowBadge";
 import { useOnchainPayments } from "@/lib/celo/payments";
@@ -113,7 +113,7 @@ function Jobs() {
     completeMutation.mutate(id);
   };
 
-  const filteredMarket = marketJobs.filter((j) => {
+  const filteredMarket = marketJobs.filter((j: any) => {
     const matchKeyword = keyword
       ? (j as any).title?.toLowerCase().includes(keyword.toLowerCase()) || j.category?.toLowerCase().includes(keyword.toLowerCase())
       : true;
@@ -175,7 +175,7 @@ function Jobs() {
                 {loadingMarket ? "Loading open gigs..." : "No available jobs match your search."}
               </div>
             )}
-            {filteredMarket.map((j, i) => (
+            {filteredMarket.map((j: any, i: number) => (
               <article
                 key={j.id || j._id || i}
                 className="rounded-3xl bg-card border shadow-soft hover:shadow-elevated transition p-6 flex flex-col animate-fade-up relative overflow-hidden"
@@ -229,7 +229,7 @@ function Jobs() {
               You have no active gigs. Head to the market!
             </div>
           )}
-          {myGigs.map((j, i) => {
+          {myGigs.map((j: any, i: number) => {
             const status = j.status || j.state;
             return (
               <div

@@ -217,7 +217,7 @@ function CustomerDashboard() {
             {isLoading ? "Loading..." : "No active jobs found."}
           </div>
         ) : (
-          myJobs.map((job, index) => {
+          myJobs.map((job: any, index: number) => {
             const jobId = job.id || job._id || index;
             const status = job.status || job.state || "open";
             const editsDone = parseInt(localStorage.getItem(`edit_count_${jobId}`) || "0", 10);
