@@ -2,15 +2,15 @@
 
 **"Your Area. Your Hustle. Your Proof."**
 
-AreaHustle is a voice-first hyper-local gig marketplace that turns everyday work into bankable creditworthiness proof. It leverages **Voice-first AI** to bridge the digital literacy gap, allowing middle-class households and small businesses to post tasks, and informal workers (Hustlers) to build a verified financial identity that unlocks credit access.
+AreaHustle is a voice-first hyper-local gig marketplace that turns everyday informal work into bankable onchain creditworthiness proof. Built for the **Celo Onchain Agents Hackathon: Build for Real World Payments & Everyday Applications**, AreaHustle bridges the digital and financial literacy gap using **Voice-first AI Agents** and the **Celo Blockchain** to power secure micropayments, trustless escrows, and accessible credit profiling for small businesses and informal workers (Hustlers) in emerging markets.
 
 ---
 
 ## 🚀 Key Features (The Three Pillars)
 
 - **🎙️ Pillar 1: Voice-to-Intent Task Posting:** Post jobs like "Car Wash" or "Generator Repair" just by speaking. Powered by **Aethex Speech-to-Text** and **Google Gemini Flash** for structured JSON intent extraction.
-- **📞 Pillar 2: AI Agent Outbound Calling & Auto-Booking:** Matched premium providers receive direct voice calls from an Aethex Outbound AI Agent to accept gigs. Upon acceptance, the agent immediately claims and books the job on their behalf to prevent others in the queue from taking it.
-- **💳 Pillar 3: Financial Passport & Creditworthiness Proof Card:** Hustlers track their standings via a premium visual dashboard and generate a shareable, cryptographically hashed alternative data card aligned with the **Nigerian Credit Reporting Act of 2017**.
+- **📞 Pillar 2: AI Agent Outbound Calling & Onchain Auto-Booking:** Matched premium providers receive direct voice calls from an Aethex Outbound AI Agent to accept gigs. Upon voice acceptance, the autonomous agent acts on their behalf to claim the job and lock in the escrowed payment on Celo, preventing others from taking the slot.
+- **💳 Pillar 3: Onchain Financial Passport & Creditworthiness Proof Card:** Hustlers track their standings via a premium visual dashboard and generate a shareable, cryptographically hashed alternative data card aligned with the **Nigerian Credit Reporting Act of 2017**, backed by verified onchain transaction histories.
 
 ---
 
@@ -22,12 +22,13 @@ AreaHustle is a voice-first hyper-local gig marketplace that turns everyday work
 - **Voice AI Platform:** [Aethex API](https://developers.aethexai.com/)
 - **Large Language Model:** [Google Gemini Flash](https://ai.google.dev/)
 - **On-chain (Celo Sepolia):** NGNm escrow via `TaskEscrow`, optional wallet sign-up via `AreaHustleRegistry`, wagmi + viem frontend
+- **Token Conversion Utilities:** Uniswap V3 swaps from NGNm to USDT natively on Celo.
 
 ---
 
-## ⛓️ Celo On-Chain Payments
+## ⛓️ Celo Onchain Payments & Stablecoin Swaps
 
-Contracts are deployed on **Celo Sepolia** (chain `11142220`):
+AreaHustle leverages Celo's mobile-first, low-cost network to handle micro-gigs and credit identity mapping. Contracts are deployed on **Celo Sepolia** (chain `11142220`):
 
 | Contract | Address |
 |----------|---------|
@@ -35,9 +36,14 @@ Contracts are deployed on **Celo Sepolia** (chain `11142220`):
 | TaskEscrow | `0x7E715F08bA9094475Fa66D3761b42d91b81689C2` |
 | NGNm token | `0x3d5ae86F34E2a82771496D140daFAEf3789dF888` |
 
-**Redeploy:** set `PRIVATE_KEY` in root `.env`, then `npm run deploy:sepolia && npm run sync:env`
+### 🔄 Multi-Stablecoin Support & Swaps
+To support everyday real-world payments, AreaHustle features direct stablecoin utility. Users can lock their local Naira stablecoin (**NGNm**) in escrow. For global currency flexibility, the project includes an onchain conversion script to swap **NGNm** to **USDT** on Celo via Uniswap V3:
+- **Celo Sepolia NGNm:** `0x3d5ae86F34E2a82771496D140daFAEf3789dF888`
+- **Celo Sepolia USDT:** `0xd077A400968890Eacc75cdc901F0356c943e4fDb`
+- See [register-8004/swap.ts](file:///c:/Users/alara/OneDrive/Desktop/Onchain-AreaHustle/register-8004/swap.ts) for execution details.
 
-**User flow:** Connect Celo wallet → Link → Post task (NGNm escrow auto-locks) → Hustler accepts → Assign on-chain → Mark done → Release payment.
+**User Flow:** Connect Celo Wallet → Post task (NGNm escrow auto-locks) → Hustler accepts via AI Outbound Voice Agent → Gig booked & assigned onchain → Task marked complete → Payment released → Optional swap of NGNm earnings to USDT.
+
 
 ---
 
@@ -115,4 +121,4 @@ Contracts are deployed on **Celo Sepolia** (chain `11142220`):
 ## 📜 License
 This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
 
-Built for the **YPIT (Young People in Tech) Hackathon 2026**.
+Built for **Onchain Hackathon Celo**.

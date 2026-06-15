@@ -1,6 +1,6 @@
 # AreaHustle Frontend
 
-A modern, high-performance web application built with **TanStack Start**, **React**, and **TypeScript**.
+A mobile-first, high-performance web application built with **TanStack Start**, **React**, and **TypeScript**, serving as the user portal for the AreaHustle onchain gig marketplace on Celo.
 
 ## 🚀 Tech Stack
 
@@ -8,6 +8,9 @@ A modern, high-performance web application built with **TanStack Start**, **Reac
 - **Routing:** [TanStack Router](https://tanstack.com/router) (Type-safe file-based routing)
 - **Build Tool:** [Vite](https://vitejs.dev/)
 - **Language:** [TypeScript](https://www.typescriptlang.org/)
+- **On-chain Integration:** [wagmi](https://wagmi.sh/) & [viem](https://viem.sh/) configured for **Celo Sepolia**
+- **Wallet Connection:** RainbowKit or App-native connector for mobile-first web3 onboarding
+- **Styling:** Custom Vanilla CSS for rapid, fluid animations and responsive dashboard layouts
 - **Linting:** ESLint with type-aware rules
 
 ## 📁 Project Structure
