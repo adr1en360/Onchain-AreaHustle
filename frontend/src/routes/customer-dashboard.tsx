@@ -3,7 +3,7 @@ import React, { useEffect, useState } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { useAuth } from "@/lib/auth-context";
 import { api } from "@/lib/api";
-import { naira } from "@/lib/format";
+import { usdc } from "@/lib/format";
 import { AnimatedNumber } from "@/components/AnimatedNumber";
 import { Plus, CheckCircle, Clock, MapPin, Phone, Edit, X, Link2 } from "lucide-react";
 import { toast } from "sonner";
@@ -102,6 +102,7 @@ function CustomerDashboard() {
     onSuccess: () => {
       toast.success("Job updated successfully.");
       queryClient.invalidateQueries({ queryKey: ["customerJobs"] });
+      queryClient.invalidateQueries({ queryKey: ["marketJobs"] });
       setEditingJob(null);
     },
     onError: (err: any) => {
@@ -114,7 +115,7 @@ function CustomerDashboard() {
     const amt = parseInt(topUpAmount);
     if (amt && amt > 0) {
       updateDemoBalance("customer", amt);
-      toast.success(`Successfully topped up ${naira(amt)}`);
+      toast.success(`Successfully topped up ${usdc(amt)}`);
       setTopUpOpen(false);
       setTopUpAmount("");
     }
@@ -125,7 +126,7 @@ function CustomerDashboard() {
     const amt = parseInt(withdrawAmount);
     if (amt && amt > 0 && amt <= walletBalance) {
       updateDemoBalance("customer", -amt);
-      toast.success(`Successfully withdrew ${naira(amt)} to bank.`);
+      toast.success(`Successfully withdrew ${usdc(amt)} to bank.`);
       setWithdrawOpen(false);
       setWithdrawAmount("");
     } else if (amt > walletBalance) {
@@ -179,9 +180,9 @@ function CustomerDashboard() {
         ) : (
           <div className="rounded-3xl bg-primary text-primary-foreground p-7 shadow-soft flex flex-col justify-between">
             <div>
-              <div className="text-xs opacity-70 uppercase tracking-widest">Demo Wallet</div>
+              <div className="text-xs opacity-70 uppercase tracking-widest">Demo Wallet (USDC)</div>
               <div className="font-display text-4xl font-bold mt-2 tabular-nums">
-                ₦<AnimatedNumber value={walletBalance} />
+                <AnimatedNumber value={walletBalance} /> <span className="text-xl">USDC</span>
               </div>
             </div>
             <div className="flex gap-3 mt-6">
@@ -259,10 +260,10 @@ function CustomerDashboard() {
                   {job.description && <p className="text-sm text-muted-foreground mt-1 line-clamp-2">{job.description}</p>}
                   <div className="flex items-center gap-3 text-xs text-muted-foreground mt-2">
                     <span className="flex items-center gap-1">
-                      <MapPin className="h-3 w-3" /> {job.location}
+                      <MapPin className="h-3 w-3" /> {job.location || job.neighbourhood}
                     </span>
                     <span className="flex items-center gap-1">
-                      <Clock className="h-3 w-3" /> {naira(displayBudget)} in Escrow
+                      <Clock className="h-3 w-3" /> {usdc(displayBudget)} in Escrow
                     </span>
                   </div>
                 </div>
@@ -271,7 +272,7 @@ function CustomerDashboard() {
                     <div className="flex flex-col sm:flex-row items-end sm:items-center gap-3">
                       {mockOffer ? (
                         <div className="flex flex-col items-end gap-2 bg-muted/30 p-3 rounded-2xl border border-primary/20 animate-fade-up">
-                           <span className="text-xs font-semibold text-primary">{mockOffer.hustlerName} offered <span className="font-display font-bold text-lg">{naira(mockOffer.amount)}</span></span>
+                           <span className="text-xs font-semibold text-primary">{mockOffer.hustlerName} offered <span className="font-display font-bold text-lg">{usdc(mockOffer.amount)}</span></span>
                            <div className="flex gap-2">
                              <button onClick={() => {
                                // Use mock budget update instead of calling backend since there's no PUT route
@@ -385,7 +386,7 @@ function CustomerDashboard() {
                   disabled={!topUpAmount}
                   className="flex-1 rounded-full bg-primary py-3 text-sm font-semibold text-primary-foreground disabled:opacity-50"
                 >
-                  Paystack Pay
+                  Top Up USDC
                 </button>
               </div>
             </form>
@@ -397,7 +398,7 @@ function CustomerDashboard() {
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 backdrop-blur-sm bg-background/80 animate-fade-up">
           <div className="relative w-full max-w-sm rounded-3xl bg-card border shadow-elevated p-8">
             <h2 className="font-display text-xl font-bold mb-2">Withdraw Funds</h2>
-            <p className="text-xs text-muted-foreground mb-4">Available balance: {naira(walletBalance)}</p>
+            <p className="text-xs text-muted-foreground mb-4">Available balance: {usdc(walletBalance)}</p>
             <form onSubmit={handleWithdraw}>
               <input
                 type="number"
@@ -475,7 +476,7 @@ function CustomerDashboard() {
                 />
               </div>
               <div>
-                <label className="text-xs font-bold uppercase tracking-wider text-muted-foreground">Budget (₦)</label>
+                <label className="text-xs font-bold uppercase tracking-wider text-muted-foreground">Budget (USDC)</label>
                 <input
                   type="number"
                   value={editingJob.budget}

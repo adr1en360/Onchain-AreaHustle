@@ -1,6 +1,6 @@
 from fastapi import APIRouter, Depends, HTTPException, Query, status
 from typing import List, Optional
-from models import Task, TaskCreate
+from models import Task, TaskCreate, TaskUpdate
 from database import get_database
 from motor.motor_asyncio import AsyncIOMotorDatabase
 from database import settings
@@ -78,6 +78,7 @@ async def create_task(
         description=task.description,
         budget=task.budget,
         neighbourhood=task.neighbourhood,
+        location=task.location or task.neighbourhood,
         voice_transcript=task.voice_transcript,
         payment_mode=payment_mode,
         escrow_status="pending" if payment_mode == "onchain" else None,
@@ -142,6 +143,7 @@ async def update_task(
 @router.get("/")
 async def list_tasks(
     neighbourhood: Optional[str] = Query(None),
+    location: Optional[str] = Query(None),
     category: Optional[str] = Query(None),
     status_filter: Optional[str] = Query("open", alias="status"),
     db: AsyncIOMotorDatabase = Depends(get_database),
@@ -149,18 +151,35 @@ async def list_tasks(
     query: dict = {}
     if status_filter:
         query["status"] = status_filter
-    if neighbourhood:
-        query["neighbourhood"] = neighbourhood
     if category:
         query["category"] = category
 
-    # On-chain gigs only appear after escrow is funded
+    conditions = []
+    
+    target_location = location or neighbourhood
+    if target_location:
+        conditions.append({
+            "$or": [
+                {"neighbourhood": target_location},
+                {"location": target_location}
+            ]
+        })
+
     if status_filter == "open":
-        query["$or"] = [
-            {"payment_mode": {"$ne": "onchain"}},
-            {"escrow_status": "funded"},
-            {"payment_mode": {"$exists": False}},
-        ]
+        conditions.append({
+            "$or": [
+                {"payment_mode": {"$ne": "onchain"}},
+                {"escrow_status": "funded"},
+                {"payment_mode": {"$exists": False}},
+            ]
+        })
+
+    if conditions:
+        if len(conditions) == 1:
+            for key, val in conditions[0].items():
+                query[key] = val
+        else:
+            query["$and"] = conditions
 
     cursor = db.tasks.find(query).sort("created_at", -1)
     tasks = []
@@ -185,6 +204,40 @@ async def list_tasks(
                 
         tasks.append(doc)
     return tasks
+
+
+@router.put("/{task_id}")
+async def update_task(
+    task_id: str,
+    task_update: TaskUpdate,
+    db: AsyncIOMotorDatabase = Depends(get_database),
+    current_user: dict = Depends(get_current_user),
+):
+    task = await db.tasks.find_one({"_id": ObjectId(task_id)})
+    if not task:
+        raise HTTPException(status_code=404, detail="Task not found")
+
+    if str(task.get("customer_id")) != str(current_user.get("_id")):
+        raise HTTPException(status_code=403, detail="Only task owner can edit the task")
+
+    if task.get("status") not in ("open", "pending"):
+        raise HTTPException(status_code=400, detail="Only open or pending tasks can be edited")
+
+    update_data = task_update.dict(exclude_unset=True)
+    if "location" in update_data and not update_data.get("neighbourhood"):
+        update_data["neighbourhood"] = update_data["location"]
+    elif "neighbourhood" in update_data and not update_data.get("location"):
+        update_data["location"] = update_data["neighbourhood"]
+
+    if update_data:
+        await db.tasks.update_one(
+            {"_id": ObjectId(task_id)},
+            {"$set": update_data}
+        )
+
+    updated = await db.tasks.find_one({"_id": ObjectId(task_id)})
+    updated["_id"] = str(updated["_id"])
+    return updated
 
 
 @router.get("/my-tasks")

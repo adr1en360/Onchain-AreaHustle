@@ -82,7 +82,7 @@ export function CreateJob({ existingJob = null }: { existingJob?: any }) {
 
         <input
           type="number"
-          placeholder="Budget (₦)"
+          placeholder="Budget (USDC)"
           value={taskData.budget}
           disabled={!canEdit}
           onChange={(e) => setTaskData({ ...taskData, budget: e.target.value })}

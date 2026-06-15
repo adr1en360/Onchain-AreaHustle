@@ -3,7 +3,7 @@ import { useEffect, useState, useRef } from "react";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { useAuth } from "@/lib/auth-context";
 import { api } from "@/lib/api";
-import { naira } from "@/lib/format";
+import { usdc } from "@/lib/format";
 import { Mic, Lock, MapPin, Tag, Wallet, Sparkles, Check, Keyboard } from "lucide-react";
 import { toast } from "sonner";
 import { useCeloContracts } from "@/lib/celo/hooks";
@@ -54,6 +54,7 @@ function PostTask() {
     onSuccess: () => {
       toast.success(paymentMode === "onchain" ? "Job posted with on-chain escrow!" : "Job Posted!");
       queryClient.invalidateQueries({ queryKey: ["customerJobs"] });
+      queryClient.invalidateQueries({ queryKey: ["marketJobs"] });
       nav({ to: "/customer-dashboard" });
     },
     onError: (err: any) => {
@@ -180,7 +181,7 @@ function PostTask() {
             </div>
             <div className="grid sm:grid-cols-2 gap-5">
               <div>
-                <label className="text-xs font-bold uppercase tracking-wider text-muted-foreground">Budget (₦)</label>
+                <label className="text-xs font-bold uppercase tracking-wider text-muted-foreground">Budget (USDC)</label>
                 <input
                   type="number"
                   value={budget}
@@ -250,7 +251,7 @@ function PostTask() {
                 {phase === "locked" && "Escrow locked"}
               </div>
               <div className="text-sm text-muted-foreground mt-1 max-w-sm">
-                {phase === "idle" && 'Try: "I need someone to service my generator in Lekki for ₦8,000".'}
+                {phase === "idle" && 'Try: "I need someone to service my generator in Lekki for 25 USDC".'}
                 {phase === "recording" && "Aethex Speech-to-Text active"}
                 {phase === "processing" && "Gemini structuring fields"}
                 {phase === "result" && "Review and lock escrow to publish to nearby hustlers."}
@@ -283,13 +284,13 @@ function PostTask() {
                   </div>
                   <div className="grid sm:grid-cols-3 gap-4">
                     <Field icon={Tag} label="Category" value={voiceResult?.category || "Repairs"} />
-                    <Field icon={Wallet} label="Budget" value={naira(voiceResult?.budget || 8000)} />
+                    <Field icon={Wallet} label="Budget" value={usdc(voiceResult?.budget || 25)} />
                     <Field icon={MapPin} label="Location" value={voiceResult?.neighbourhood || "Lekki Phase 1"} />
                   </div>
                   <div className="mt-5 rounded-xl bg-card border p-4 text-sm text-muted-foreground italic">
                     "
                     {voiceResult?.description ||
-                      "I need someone to come service my Tiger generator today in Lekki Phase 1, budget around eight thousand naira."}
+                      "I need someone to come service my Tiger generator today in Lekki Phase 1, budget around 25 USDC."}
                     "
                   </div>
                 </div>
@@ -300,8 +301,8 @@ function PostTask() {
                       title: voiceResult?.category || "Generator Servicing",
                       description:
                         voiceResult?.description ||
-                        "I need someone to come service my Tiger generator today in Lekki Phase 1, budget around eight thousand naira.",
-                      budget: voiceResult?.budget || 8000,
+                        "I need someone to come service my Tiger generator today in Lekki Phase 1, budget around 25 USDC.",
+                      budget: voiceResult?.budget || 25,
                       neighbourhood: voiceResult?.neighbourhood || "Lekki Phase 1",
                       category: voiceResult?.category || "Repairs",
                     });

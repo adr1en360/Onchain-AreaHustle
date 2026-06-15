@@ -3,7 +3,7 @@ import { useEffect, useState } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { useAuth } from "@/lib/auth-context";
 import { api } from "@/lib/api";
-import { naira } from "@/lib/format";
+import { usdc } from "@/lib/format";
 import { MapPin, Lock, Sparkles, Phone, CheckCircle, Search, X, Mic } from "lucide-react";
 import { toast } from "sonner";
 import { EscrowBadge } from "@/components/EscrowBadge";
@@ -76,7 +76,7 @@ function Jobs() {
     const amt = parseInt(offerAmount);
     if (amt > 0) {
       localStorage.setItem(`mock_offer_${jobId}`, JSON.stringify({ amount: amt, hustlerName: user?.name || "A Hustler" }));
-      toast.success(`Offer of ${naira(amt)} sent to customer!`);
+      toast.success(`Offer of ${usdc(amt)} sent to customer!`);
       setNegotiatingJob(null);
       setOfferAmount("");
     }
@@ -219,7 +219,7 @@ function Jobs() {
                 <div className="mt-auto flex flex-wrap gap-3 items-center justify-between">
                   <div>
                     <div className="text-[10px] uppercase tracking-widest text-muted-foreground">Payout</div>
-                    <div className="font-display text-2xl font-bold">{naira(displayBudget)}</div>
+                    <div className="font-display text-2xl font-bold">{usdc(displayBudget)}</div>
                   </div>
                   <div className="flex items-center gap-2">
 
@@ -229,7 +229,7 @@ function Jobs() {
                           type="number" 
                           autoFocus 
                           required 
-                          placeholder="₦" 
+                          placeholder="USDC" 
                           value={offerAmount} 
                           onChange={e => setOfferAmount(e.target.value)} 
                           onClick={e => e.stopPropagation()}
@@ -313,7 +313,7 @@ function Jobs() {
                       <MapPin className="h-4 w-4 text-primary" /> Exact Location Revealed
                     </span>
                     <span className="flex items-center gap-1 font-semibold text-success">
-                      {naira(displayBudget)} Locked
+                      {usdc(displayBudget)} Locked
                       {j.payment_mode === "onchain" && (
                         <span className="text-[10px] font-normal text-emerald-600 ml-1">· Celo</span>
                       )}
@@ -391,7 +391,7 @@ function Jobs() {
             <div className="flex items-center justify-between border-t pt-4">
               <div>
                 <div className="text-xs uppercase tracking-widest text-muted-foreground">Payout</div>
-                <div className="font-display text-2xl font-bold text-success">{naira(selectedJob.budget)}</div>
+                <div className="font-display text-2xl font-bold text-success">{usdc(selectedJob.budget)}</div>
               </div>
               <div className="flex gap-2">
                 <button className="flex items-center justify-center gap-2 rounded-full border px-4 py-2.5 text-sm font-semibold hover:bg-muted transition">

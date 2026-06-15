@@ -11,7 +11,7 @@ import { celoSepolia } from "wagmi/chains";
 import { maxUint256 } from "viem";
 import { api } from "@/lib/api";
 import { escrowAbi, erc20Abi, registryAbi } from "./abis";
-import { CELO_SEPOLIA_CHAIN_ID, nairaToTokenWei, roleToRegistryEnum, type CeloConfig } from "./config";
+import { CELO_SEPOLIA_CHAIN_ID, usdcToTokenWei, roleToRegistryEnum, type CeloConfig } from "./config";
 
 export function useCeloWallet() {
   const { address, isConnected, chainId } = useAccount();
@@ -57,7 +57,7 @@ export function useCeloContracts(config: CeloConfig | null) {
       if (!config?.escrowAddress || !config.paymentToken || !address) {
         throw new Error("Celo contracts or wallet not configured");
       }
-      const amount = nairaToTokenWei(budget);
+      const amount = usdcToTokenWei(budget);
 
       const allowance = await publicClient!.readContract({
         address: config.paymentToken,

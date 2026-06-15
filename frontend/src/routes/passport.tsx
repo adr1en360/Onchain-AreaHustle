@@ -3,7 +3,7 @@ import React, { useEffect, useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { useAuth } from "@/lib/auth-context";
 import { api } from "@/lib/api";
-import { naira } from "@/lib/format";
+import { usdc } from "@/lib/format";
 import { AnimatedNumber } from "@/components/AnimatedNumber";
 import {
   ShieldCheck,
@@ -117,7 +117,7 @@ function PassportPage() {
           <div className="flex items-center gap-3 sm:gap-4">
             <div className="text-right">
               <div className="text-[10px] text-muted-foreground uppercase tracking-widest font-semibold">Total Wallet Balance</div>
-              <div className="font-display font-bold text-base sm:text-lg text-[#0D3B2E]">{naira(user?.wallet_balance || 0)}</div>
+              <div className="font-display font-bold text-base sm:text-lg text-[#0D3B2E]">{usdc(user?.wallet_balance || 0)}</div>
             </div>
             <div className="h-10 w-10 rounded-full bg-[#0D3B2E] text-white flex items-center justify-center font-bold shadow-soft">EA</div>
           </div>
@@ -264,7 +264,7 @@ function PassportPage() {
                     </div>
                     <div className={`font-display text-xl font-bold self-end sm:self-center ${t.amount > 0 ? "text-[#10B981]" : "text-gray-900"}`}>
                       {t.amount > 0 ? "+" : ""}
-                      {naira(t.amount)}
+                      {usdc(t.amount)}
                     </div>
                   </div>
                 );
