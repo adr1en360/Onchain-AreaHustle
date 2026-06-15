@@ -1,21 +1,25 @@
 import React, { useState, useEffect } from "react";
 import { useAuth } from "@/lib/auth-context";
-import { X, Loader2, Wallet } from "lucide-react";
+import { X, Loader2, Wallet, ShieldCheck, User, Users } from "lucide-react";
 import { toast } from "sonner";
 import { useNavigate } from "@tanstack/react-router";
 import { useCeloConfig } from "@/components/CeloProvider";
 import { useCeloContracts, useCeloWallet } from "@/lib/celo/hooks";
-import { api } from "@/lib/api";
 
-export function AuthModal({ open, onClose, initialRole, initialMode }: any) {
-  const { login, register, loginWithToken } = useAuth();
+interface AuthModalProps {
+  open: boolean;
+  onClose: () => void;
+  initialRole?: "customer" | "hustler";
+  initialMode?: "login" | "register";
+}
+
+export function AuthModal({ open, onClose, initialRole, initialMode }: AuthModalProps) {
+  const { loginWithWallet } = useAuth();
   const { config } = useCeloConfig();
   const { address, connectWallet, isConnected } = useCeloWallet();
   const { signWalletChallenge } = useCeloContracts(config);
-  const [mode, setMode] = useState(initialMode || "login");
-  const [role, setRole] = useState(initialRole || "customer");
-  const [email, setEmail] = useState("");
-  const [password, setPassword] = useState("");
+  const [mode, setMode] = useState<"login" | "register">(initialMode || "login");
+  const [role, setRole] = useState<"customer" | "hustler">(initialRole || "customer");
   const [name, setName] = useState("");
   const [loading, setLoading] = useState(false);
   const nav = useNavigate();
@@ -24,160 +28,153 @@ export function AuthModal({ open, onClose, initialRole, initialMode }: any) {
     if (open) {
       setMode(initialMode || "login");
       setRole(initialRole || "customer");
+      setName("");
     }
   }, [open, initialMode, initialRole]);
 
   if (!open) return null;
 
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    setLoading(true);
-    try {
-      let loggedInUser;
-      if (mode === "login") {
-        loggedInUser = await login({ username: email, password });
-        toast.success("Logged in successfully!");
-      } else {
-        loggedInUser = await register({ email, password, name, role, language_preference: "english" });
-        toast.success("Registered successfully!");
-      }
-      onClose();
-
-      const userRole = loggedInUser?.role || role;
-      const targetRoute = mode === "register" && userRole === "hustler" ? "/onboarding" : userRole === "customer" ? "/customer-dashboard" : "/jobs";
-      nav({ to: targetRoute });
-    } catch (err: any) {
-      toast.error(err.message || "Authentication failed");
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  const handleWalletRegister = async () => {
+  const handleWalletAuth = async () => {
     setLoading(true);
     try {
       let walletAddress = address;
       if (!isConnected || !walletAddress) {
         await connectWallet();
+        // Wait briefly for address to become available from window.ethereum
         walletAddress = (window as any).ethereum?.selectedAddress;
       }
-      if (!walletAddress) throw new Error("Connect a wallet first");
+      if (!walletAddress) {
+        throw new Error("Could not detect wallet address. Please make sure MetaMask or another Celo wallet is connected.");
+      }
 
-      const signed = await signWalletChallenge(walletAddress, "register");
-      const res = await api.walletRegister({
+      toast.loading("Requesting challenge signature from wallet...", { id: "wallet-auth" });
+      
+      const challengeAction = mode === "register" ? "register" : "login";
+      const signed = await signWalletChallenge(walletAddress, challengeAction);
+      
+      toast.loading("Authenticating with AreaHustle network...", { id: "wallet-auth" });
+
+      const res = await loginWithWallet({
         address: walletAddress,
         signature: signed.signature,
         nonce: signed.nonce,
-        role,
-        name: name || `Wallet ${walletAddress.slice(0, 8)}`,
+        role: role,
+        name: mode === "register" ? (name || `Wallet ${walletAddress.slice(0, 8)}`) : "",
       });
-      await loginWithToken(res.access_token);
-      toast.success("Wallet account created");
+
+      toast.success(res?.is_new ? "Passport created successfully!" : "Signed in successfully!", { id: "wallet-auth" });
       onClose();
-      const targetRoute = role === "hustler" ? "/onboarding" : "/customer-dashboard";
+
+      // Navigate based on role and onboarding status
+      const userRole = res?.role || role;
+      const targetRoute = res?.is_new && userRole === "hustler" ? "/onboarding" : userRole === "customer" ? "/customer-dashboard" : "/jobs";
       nav({ to: targetRoute });
     } catch (err: any) {
-      toast.error(err.message || "Wallet sign-up failed");
+      console.error(err);
+      toast.error(err.message || "Wallet authentication failed", { id: "wallet-auth" });
     } finally {
       setLoading(false);
     }
   };
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 backdrop-blur-sm bg-background/80 animate-in fade-in">
-      <div className="relative w-full max-w-md rounded-3xl bg-card border shadow-elevated p-8">
-        <button onClick={onClose} className="absolute right-6 top-6 text-muted-foreground hover:text-foreground">
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-md animate-in fade-in duration-300">
+      {/* Premium Glassmorphism Card */}
+      <div className="relative w-full max-w-md rounded-[32px] bg-gradient-to-b from-card/90 to-card/50 border border-white/10 shadow-2xl p-8 backdrop-blur-xl animate-in zoom-in-95 duration-200">
+        
+        {/* Close Button */}
+        <button onClick={onClose} className="absolute right-6 top-6 rounded-full p-1.5 text-muted-foreground hover:text-foreground hover:bg-muted/50 transition">
           <X className="h-5 w-5" />
         </button>
-        <h2 className="font-display text-2xl font-bold mb-2">{mode === "login" ? "Welcome Back" : "Join AreaHustle"}</h2>
-        <p className="text-sm text-muted-foreground mb-6">
-          {mode === "login" ? "Sign in to your account to continue" : "Create an account to get started"}
-        </p>
-        <form onSubmit={handleSubmit} className="space-y-4">
-          {mode === "register" && (
-            <>
-              <div>
-                <label className="text-xs font-bold uppercase text-muted-foreground">I want to</label>
-                <div className="mt-1 flex gap-3">
-                  <button
-                    type="button"
-                    onClick={() => setRole("customer")}
-                    className={`flex-1 rounded-xl border py-2.5 text-sm font-semibold transition ${role === "customer" ? "bg-primary text-primary-foreground border-primary" : "bg-card text-foreground hover:bg-muted"}`}
-                  >
-                    Hire
-                  </button>
-                  <button
-                    type="button"
-                    onClick={() => setRole("hustler")}
-                    className={`flex-1 rounded-xl border py-2.5 text-sm font-semibold transition ${role === "hustler" ? "bg-primary text-primary-foreground border-primary" : "bg-card text-foreground hover:bg-muted"}`}
-                  >
-                    Work
-                  </button>
-                </div>
-              </div>
-              <div>
-                <label className="text-xs font-bold uppercase text-muted-foreground">Full Name</label>
-                <input
-                  type="text"
-                  value={name}
-                  onChange={(e) => setName(e.target.value)}
-                  required
-                  className="mt-1 w-full rounded-xl border bg-background px-4 py-3 outline-none focus:border-primary"
-                />
-              </div>
-            </>
-          )}
-          <div>
-            <label className="text-xs font-bold uppercase text-muted-foreground">Email</label>
-            <input
-              type="email"
-              value={email}
-              onChange={(e) => setEmail(e.target.value)}
-              required
-              className="mt-1 w-full rounded-xl border bg-background px-4 py-3 outline-none focus:border-primary"
-            />
+
+        {/* Header with Celo branding */}
+        <div className="flex flex-col items-center text-center mb-6">
+          <div className="mb-4 flex h-14 w-14 items-center justify-center rounded-2xl bg-emerald-500/10 border border-emerald-500/20 text-emerald-500 animate-pulse">
+            <ShieldCheck className="h-7 w-7" />
           </div>
-          <div>
-            <label className="text-xs font-bold uppercase text-muted-foreground">Password</label>
-            <input
-              type="password"
-              value={password}
-              onChange={(e) => setPassword(e.target.value)}
-              required
-              className="mt-1 w-full rounded-xl border bg-background px-4 py-3 outline-none focus:border-primary"
-            />
-          </div>
+          <h2 className="font-display text-2xl font-bold tracking-tight">
+            {mode === "login" ? "Sign In to AreaHustle" : "Create Onchain Passport"}
+          </h2>
+          <p className="text-sm text-muted-foreground mt-1.5 max-w-xs">
+            {mode === "login" 
+              ? "Access your dashboard using your connected Celo wallet" 
+              : "Set up your role and connect a wallet to verify your identity"}
+          </p>
+        </div>
+
+        {/* Tab Selectors (Login vs Register) */}
+        <div className="grid grid-cols-2 p-1 bg-muted/40 rounded-2xl mb-6 border border-white/5">
           <button
-            type="submit"
-            disabled={loading}
-            className="w-full rounded-full bg-primary py-3.5 text-sm font-semibold text-primary-foreground flex justify-center items-center gap-2 mt-4"
+            onClick={() => setMode("login")}
+            className={`py-2 text-sm font-semibold rounded-xl transition-all duration-200 ${mode === "login" ? "bg-card text-foreground shadow-sm" : "text-muted-foreground hover:text-foreground"}`}
           >
-            {loading ? <Loader2 className="h-4 w-4 animate-spin" /> : mode === "login" ? "Login" : "Register"}
+            Sign In
           </button>
-          <div className="text-center mt-4">
+          <button
+            onClick={() => setMode("register")}
+            className={`py-2 text-sm font-semibold rounded-xl transition-all duration-200 ${mode === "register" ? "bg-card text-foreground shadow-sm" : "text-muted-foreground hover:text-foreground"}`}
+          >
+            Register
+          </button>
+        </div>
+
+        {/* Profile Type Selector (Visible for both Login and Register) */}
+        <div className="mb-6">
+          <label className="text-xs font-bold uppercase tracking-wider text-muted-foreground">Select Profile Type</label>
+          <div className="grid grid-cols-2 gap-3 mt-1.5">
             <button
               type="button"
-              onClick={() => setMode(mode === "login" ? "register" : "login")}
-              className="text-sm text-muted-foreground hover:text-foreground font-medium transition"
+              onClick={() => setRole("customer")}
+              className={`flex items-center justify-center gap-2 rounded-2xl border py-3.5 text-sm font-semibold transition ${role === "customer" ? "bg-emerald-600 border-emerald-500 text-white shadow-lg shadow-emerald-600/10" : "bg-card border-white/5 hover:bg-muted text-muted-foreground hover:text-foreground"}`}
             >
-              {mode === "login" ? "Don't have an account? Sign up" : "Already have an account? Log in"}
+              <Users className="h-4 w-4" />
+              Hire (Customer)
+            </button>
+            <button
+              type="button"
+              onClick={() => setRole("hustler")}
+              className={`flex items-center justify-center gap-2 rounded-2xl border py-3.5 text-sm font-semibold transition ${role === "hustler" ? "bg-emerald-600 border-emerald-500 text-white shadow-lg shadow-emerald-600/10" : "bg-card border-white/5 hover:bg-muted text-muted-foreground hover:text-foreground"}`}
+            >
+              <User className="h-4 w-4" />
+              Work (Hustler)
             </button>
           </div>
+        </div>
 
-          {mode === "register" && config.enabled && (
-            <div className="mt-6 border-t pt-6">
-              <p className="text-xs text-muted-foreground text-center mb-3">Optional: sign up with Celo wallet only</p>
-              <button
-                type="button"
-                onClick={handleWalletRegister}
-                disabled={loading}
-                className="w-full rounded-full border py-3 text-sm font-semibold flex justify-center items-center gap-2 hover:bg-muted transition"
-              >
-                <Wallet className="h-4 w-4" /> Sign up with Celo Wallet
-              </button>
+        {/* Form Fields only for Registration */}
+        {mode === "register" && (
+          <div className="space-y-5 mb-6 animate-in slide-in-from-top-4 duration-200">
+            <div>
+              <label className="text-xs font-bold uppercase tracking-wider text-muted-foreground">Full Name / Business Name</label>
+              <input
+                type="text"
+                placeholder="e.g. Kolawole Davies"
+                value={name}
+                onChange={(e) => setName(e.target.value)}
+                className="mt-1.5 w-full rounded-2xl border border-white/5 bg-background/50 px-4 py-3.5 text-sm placeholder:text-muted-foreground/60 outline-none focus:border-emerald-500/50 focus:ring-1 focus:ring-emerald-500/20 transition"
+              />
             </div>
+          </div>
+        )}
+
+        {/* Wallet Auth Button */}
+        <button
+          onClick={handleWalletAuth}
+          disabled={loading}
+          className="w-full rounded-full bg-emerald-600 hover:bg-emerald-500 disabled:opacity-50 text-white py-4 text-sm font-semibold flex justify-center items-center gap-2 shadow-lg shadow-emerald-600/20 hover:scale-[1.01] active:scale-[0.99] transition duration-200"
+        >
+          {loading ? (
+            <Loader2 className="h-5 w-5 animate-spin" />
+          ) : (
+            <Wallet className="h-5 w-5" />
           )}
-        </form>
+          {mode === "login" ? "Connect & Sign In" : "Connect & Create Passport"}
+        </button>
+
+        {/* Security disclaimer */}
+        <p className="text-[10px] text-muted-foreground/50 text-center mt-5 leading-normal">
+          Secure, cryptographic authentication on Celo. By connecting, you verify ownership of this wallet address.
+        </p>
       </div>
     </div>
   );

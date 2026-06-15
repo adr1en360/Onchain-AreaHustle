@@ -41,8 +41,8 @@ export function Navbar() {
       <nav className="sticky top-0 z-40 border-b bg-background/80 backdrop-blur-md">
         <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between gap-3">
           <Link to="/" className="flex items-center gap-2 font-display text-xl font-bold tracking-tight hover:opacity-90 transition shrink-0">
-            <img src={logo} alt="AreaHustle Logo" className="h-8 w-auto object-contain" />
-            <span className="hidden sm:inline">AreaHustle.</span>
+            <img src={logo} alt="Onchain AreaHustle Logo" className="h-8 w-auto object-contain" />
+            <span className="hidden sm:inline">Onchain AreaHustle.</span>
           </Link>
 
           {isLoggedIn ? (
@@ -89,15 +89,11 @@ export function Navbar() {
             </div>
           ) : (
             <div className="flex items-center gap-2 sm:gap-3">
-              {celoEnabled && <WalletConnectButton compact />}
-              <button onClick={() => { setAuthMode("login"); setAuthOpen(true); }} className="text-sm font-medium hover:text-primary transition">
-                Login
-              </button>
               <button
-                onClick={() => { setAuthMode("register"); setAuthOpen(true); }}
-                className="rounded-full bg-primary px-4 py-2 text-sm font-semibold text-primary-foreground hover:opacity-95 transition"
+                onClick={() => { setAuthMode("login"); setAuthOpen(true); }}
+                className="rounded-full bg-emerald-600 hover:bg-emerald-500 px-4 py-2 text-sm font-semibold text-white transition duration-200"
               >
-                Create Account
+                Connect Wallet
               </button>
             </div>
           )}

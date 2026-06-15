@@ -10,6 +10,7 @@ type AuthContextType = {
   token: string | null;
   login: (data: any) => Promise<any>;
   register: (data: any) => Promise<any>;
+  loginWithWallet: (data: { address: string; signature: string; nonce: string; role?: string; name?: string }) => Promise<any>;
   logout: () => void;
   language: string;
   setLanguage: (lang: string) => void;
@@ -90,6 +91,13 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     return await login({ username: data.email, password: data.password });
   };
 
+  const loginWithWallet = async (data: { address: string; signature: string; nonce: string; role?: string; name?: string }) => {
+    const res = await api.walletAuth(data);
+    localStorage.setItem("token", res.access_token);
+    setToken(res.access_token);
+    return refreshUser();
+  };
+
   const updateDemoBalance = (role: string, amount: number) => {
     if (user?.wallet_address) return;
     const key = role === "customer" ? "demo_customer_balance" : "demo_hustler_balance";
@@ -120,6 +128,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         token,
         login,
         register,
+        loginWithWallet,
         logout,
         language,
         setLanguage,

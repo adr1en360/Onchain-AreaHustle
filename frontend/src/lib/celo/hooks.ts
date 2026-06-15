@@ -138,7 +138,7 @@ export function useCeloContracts(config: CeloConfig | null) {
     [config, writeContractAsync, waitForTx],
   );
 
-  const signWalletChallenge = useCallback(async (address: string, action: "link" | "register") => {
+  const signWalletChallenge = useCallback(async (address: string, action: "link" | "register" | "login" | "auth") => {
     const challenge = await api.getWalletChallenge(address, action);
     const provider = (window as any).ethereum;
     if (!provider) throw new Error("Wallet not available");

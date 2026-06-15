@@ -84,8 +84,26 @@
 @utility shadow-soft { box-shadow: var(--shadow-soft); }
 @utility shadow-elevated { box-shadow: var(--shadow-elevated); }
 @utility glass {
-  background: rgba(255,255,255,0.7);
+  background: rgba(255, 255, 255, 0.7);
   backdrop-filter: saturate(180%) blur(20px);
+}
+@utility glass-premium {
+  background: rgba(255, 255, 255, 0.05);
+  backdrop-filter: saturate(180%) blur(20px);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+}
+@utility glass-card {
+  background: rgba(255, 255, 255, 0.45);
+  backdrop-filter: saturate(180%) blur(16px);
+  border: 1px solid rgba(255, 255, 255, 0.3);
+  box-shadow: 0 10px 40px -10px rgba(0, 0, 0, 0.04);
+}
+@utility hover-card-trigger {
+  transition: all 0.3s cubic-bezier(0.2, 0.8, 0.2, 1);
+  &:hover {
+    transform: translateY(-4px) scale(1.015);
+    box-shadow: 0 20px 40px -15px rgba(0, 0, 0, 0.08);
+  }
 }
 
 @keyframes voice-pulse {
