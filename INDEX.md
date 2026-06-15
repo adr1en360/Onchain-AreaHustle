@@ -13,6 +13,7 @@
 | **`PROJECT_SUBMISSION.md`** | **The Entry Form:** Hackathon submission details. Needs updating to v2.0. | At submission time. |
 | **`PROJECT_SHOWCASE.md`** | **The Elevator Pitch:** Short-form project showcase. Needs updating to v2.0. | At submission time. |
 | **`DEMO_STRATEGY.md`** | **The Demo Playbook:** Capturing the "wow moment" (AI Match Outbound Call + Creditworthiness Proof Card). Follows the 2-minute pitch script. | Before demo recording. |
+| **`DEMO_SCRIPT.md`** | **The Video Script:** Detailed step-by-step 2-minute voiceover and screen actions for recording the final submission video. | Before demo recording. |
 | **`RISK_MITIGATION.md`** | **The Safety Net:** Technical risk mitigation strategies. Most still apply. | During build week. |
 | **`HANDOFF.md`** | **The Developer Guide:** Backend vs. Frontend duty separation. | When onboarding team members. |
 | **`FAILED_ATTEMPTS.md`** | **The Log:** Record of technical dead-ends. | When an approach fails. |

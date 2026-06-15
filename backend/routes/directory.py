@@ -11,7 +11,7 @@ async def directory_meta():
         "city": CITY,
         "category": CATEGORY,
         "neighbourhood": NEIGHBOURHOOD,
-        "payment_token": "USDT",
+        "payment_token": "USDC",
         "chain": "Celo Sepolia",
     }
 

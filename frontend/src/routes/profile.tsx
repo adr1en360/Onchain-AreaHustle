@@ -8,7 +8,6 @@ import { User, MapPin, Loader2, Save, Briefcase } from "lucide-react";
 import { CeloWalletBadge } from "@/components/CeloWalletBadge";
 import { WalletConnectButton } from "@/components/WalletConnectButton";
 import { useOnchainPayments } from "@/lib/celo/payments";
-import { shortenAddress } from "@/lib/celo/config";
 
 export const Route = createFileRoute("/profile")({
   head: () => ({ meta: [{ title: "My Profile · Onchain AreaHustle" }] }),
@@ -89,16 +88,15 @@ function ProfilePage() {
         <CeloWalletBadge />
       ) : celoEnabled ? (
         <div className="space-y-3">
-          <p className="text-sm text-muted-foreground">Connect your Celo wallet to receive USDT payouts automatically.</p>
+          <p className="text-sm text-muted-foreground">Connect your Celo wallet to receive USDC payouts automatically.</p>
           <WalletConnectButton />
         </div>
       ) : (
         <p className="text-sm text-muted-foreground">Demo wallet mode — link a Celo wallet when contracts are live.</p>
       )}
       {user?.wallet_address && (
-        <p className="text-xs text-muted-foreground mt-3">
-          Linked: <span className="font-mono bg-muted px-1.5 py-0.5 rounded text-[11px] text-amber-800 font-medium">{shortenAddress(user.wallet_address)}</span>
-          {user.onchain_registered && " · On-chain profile verified"}
+        <p className="text-xs text-muted-foreground mt-3 font-medium text-emerald-700">
+          Wallet linked{user.onchain_registered && " · On-chain profile verified"}
         </p>
       )}
     </div>

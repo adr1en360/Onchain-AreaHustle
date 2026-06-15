@@ -59,7 +59,7 @@ function CustomerDashboard() {
       return api.completeTask(id);
     },
     onSuccess: (data, variables) => {
-      toast.success(data?.onchain ? "USDT payment released on Celo!" : "Payment released! Escrow funds transferred to Hustler.");
+      toast.success(data?.onchain ? "USDC payment released on Celo!" : "Payment released! Escrow funds transferred to Hustler.");
 
       const job = myJobs.find((j: any) => (j.id || j._id) == variables);
       if (job && job.payment_mode !== "onchain") {
@@ -295,7 +295,7 @@ function CustomerDashboard() {
                           disabled={confirmMutation.isPending}
                           className="rounded-full bg-[#183620] text-white px-4 py-2 text-xs font-semibold hover:opacity-90 flex items-center gap-1.5"
                         >
-                          <CheckCircle className="h-3.5 w-3.5" /> Release USDT on Celo
+                          <CheckCircle className="h-3.5 w-3.5" /> Release USDC on Celo
                         </button>
                       )}
                     </div>
@@ -304,14 +304,14 @@ function CustomerDashboard() {
                     <div className="flex flex-col items-end gap-2 w-full sm:w-auto">
                       <span className="text-xs text-orange-600 font-semibold italic px-1">
                         Hustler marked as done. Please review.
-                        {job.payment_mode === "onchain" && " Release USDT from your wallet."}
+                        {job.payment_mode === "onchain" && " Release USDC from your wallet."}
                       </span>
                       <button
                         onClick={() => handleConfirm(job.id || job._id)}
                         disabled={confirmMutation.isPending}
                         className="w-full sm:w-auto justify-center rounded-full bg-[#183620] text-white px-5 py-2.5 text-sm font-semibold hover:opacity-90 transition flex items-center gap-2 shadow-soft animate-pulse"
                       >
-                        <CheckCircle className="h-4 w-4" /> {job.payment_mode === "onchain" ? "Release USDT on Celo" : "Release Payment"}
+                        <CheckCircle className="h-4 w-4" /> {job.payment_mode === "onchain" ? "Release USDC on Celo" : "Release Payment"}
                       </button>
                     </div>
                   )}

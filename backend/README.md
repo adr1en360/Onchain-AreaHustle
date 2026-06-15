@@ -9,7 +9,7 @@ FastAPI backend orchestrator for the AreaHustle hyper-local gig marketplace. It 
 - **Auth:** JWT + bcrypt (OAuth2PasswordBearer)
 - **Voice AI:** Aethex (WebRTC voice platform & Outbound Calling)
 - **LLM/NLU:** Google Gemini Flash (voice-to-intent structured JSON extraction)
-- **On-chain Integration:** Celo Sepolia (TaskEscrow interactions, NGNm/USDT stablecoin flows, and wallet registry lookup)
+- **On-chain Integration:** Celo Sepolia (TaskEscrow interactions, USDC stablecoin flows, and wallet registry lookup)
 - **Package Manager:** `uv` (recommended) or `pip`
 
 ## Setup
@@ -38,9 +38,9 @@ GEMINI_API_KEY=your_gemini_key
 # Celo Integration Configuration
 CELO_RPC_URL=https://forno.celo-sepolia.celo-testnet.org
 CELO_CHAIN_ID=11142220
-CELO_REGISTRY_ADDRESS=0x2eF4B39664eC55E813bB90703D875a0402C82986
-CELO_ESCROW_ADDRESS=0x7E715F08bA9094475Fa66D3761b42d91b81689C2
-CELO_PAYMENT_TOKEN=0xd077A400968890Eacc75cdc901F0356c943e4fDb
+CELO_REGISTRY_ADDRESS=0x3924d078753C0e007697b8b487bbdD17Aa6fb580
+CELO_ESCROW_ADDRESS=0x61D4fd78A858D0A74397fAe8F89b0bb7A2576e65
+CELO_PAYMENT_TOKEN=0x01C5C0122039549AD1493B8220cABEdD739BC44E
 ```
 
 ### 3. Run the server

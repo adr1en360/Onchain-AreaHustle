@@ -15,9 +15,9 @@ class Settings(BaseSettings):
     CELO_CHAIN_ID: int = 11142220
     CELO_REGISTRY_ADDRESS: str = ""
     CELO_ESCROW_ADDRESS: str = ""
-    CELO_PAYMENT_TOKEN: str = "0xd077A400968890Eacc75cdc901F0356c943e4fDb"
+    CELO_PAYMENT_TOKEN: str = "0x01C5C0122039549AD1493B8220cABEdD739BC44E"
     CELO_PAYMENT_DECIMALS: int = 6
-    CELO_PAYMENT_SYMBOL: str = "USDT"
+    CELO_PAYMENT_SYMBOL: str = "USDC"
 
     model_config = SettingsConfigDict(
         env_file=(".env", "../.env"),

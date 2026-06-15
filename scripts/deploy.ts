@@ -2,10 +2,9 @@ import { ethers } from "hardhat";
 import * as fs from "fs";
 import * as path from "path";
 
-// Celo Sepolia NGNm — local-currency stablecoin for Nigerian gig payments
-const CELO_SEPOLIA_NGNM = "0x3d5ae86F34E2a82771496D140daFAEf3789dF888";
-const CELO_SEPOLIA_USDT = "0xd077A400968890Eacc75cdc901F0356c943e4fDb";
-const CELO_MAINNET_NGNM = "0x3d5ae86F34E2a82771496D140daFAEf3789dF888";
+// Celo Sepolia USDC — stablecoin for Celo payments
+const CELO_SEPOLIA_USDC = "0x01C5C0122039549AD1493B8220cABEdD739BC44E";
+const CELO_MAINNET_USDC = "0xcebA9300f2b948710d2653dD7B07f33A8B32118C";
 
 async function main() {
   const signers = await ethers.getSigners();
@@ -23,8 +22,8 @@ async function main() {
 
   const paymentToken =
     chainId === 42220
-      ? process.env.CELO_PAYMENT_TOKEN || CELO_MAINNET_NGNM
-      : process.env.CELO_PAYMENT_TOKEN || CELO_SEPOLIA_USDT;
+      ? process.env.CELO_PAYMENT_TOKEN || CELO_MAINNET_USDC
+      : process.env.CELO_PAYMENT_TOKEN || CELO_SEPOLIA_USDC;
 
   const Registry = await ethers.getContractFactory("AreaHustleRegistry");
   const registry = await Registry.deploy();
@@ -37,7 +36,7 @@ async function main() {
   await escrow.waitForDeployment();
   const escrowAddress = await escrow.getAddress();
   console.log("TaskEscrow:", escrowAddress);
-  console.log("Payment token (USDT):", paymentToken);
+  console.log("Payment token (USDC):", paymentToken);
 
   const addresses = {
     chainId,

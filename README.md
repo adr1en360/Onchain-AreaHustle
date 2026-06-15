@@ -21,8 +21,8 @@ AreaHustle is a voice-first hyper-local gig marketplace that turns everyday info
 - **Database:** [MongoDB](https://www.mongodb.com/) (Async with Motor Driver)
 - **Voice AI Platform:** [Aethex API](https://developers.aethexai.com/)
 - **Large Language Model:** [Google Gemini Flash](https://ai.google.dev/)
-- **On-chain (Celo Sepolia):** NGNm escrow via `TaskEscrow`, optional wallet sign-up via `AreaHustleRegistry`, wagmi + viem frontend
-- **Token Conversion Utilities:** Uniswap V3 swaps from NGNm to USDT natively on Celo.
+- **On-chain (Celo Sepolia):** USDC escrow via `TaskEscrow`, optional wallet sign-up via `AreaHustleRegistry`, wagmi + viem frontend
+- **Token Conversion Utilities:** Uniswap V3 swaps from NGNm to USDC natively on Celo.
 
 ---
 
@@ -32,17 +32,17 @@ AreaHustle leverages Celo's mobile-first, low-cost network to handle micro-gigs 
 
 | Contract | Address |
 |----------|---------|
-| AreaHustleRegistry | `0x2eF4B39664eC55E813bB90703D875a0402C82986` |
-| TaskEscrow | `0x7E715F08bA9094475Fa66D3761b42d91b81689C2` |
-| NGNm token | `0x3d5ae86F34E2a82771496D140daFAEf3789dF888` |
+| AreaHustleRegistry | `0x3924d078753C0e007697b8b487bbdD17Aa6fb580` |
+| TaskEscrow | `0x61D4fd78A858D0A74397fAe8F89b0bb7A2576e65` |
+| USDC token | `0x01C5C0122039549AD1493B8220cABEdD739BC44E` |
 
 ### 🔄 Multi-Stablecoin Support & Swaps
-To support everyday real-world payments, AreaHustle features direct stablecoin utility. Users can lock their local Naira stablecoin (**NGNm**) in escrow. For global currency flexibility, the project includes an onchain conversion script to swap **NGNm** to **USDT** on Celo via Uniswap V3:
+To support everyday real-world payments, AreaHustle features direct stablecoin utility. Users lock their **USDC** in escrow. For local/global currency flexibility, the project includes an onchain conversion script to swap **NGNm** to **USDC** on Celo via Uniswap V3:
 - **Celo Sepolia NGNm:** `0x3d5ae86F34E2a82771496D140daFAEf3789dF888`
-- **Celo Sepolia USDT:** `0xd077A400968890Eacc75cdc901F0356c943e4fDb`
+- **Celo Sepolia USDC:** `0x01C5C0122039549AD1493B8220cABEdD739BC44E`
 - See [register-8004/swap.ts](file:///c:/Users/alara/OneDrive/Desktop/Onchain-AreaHustle/register-8004/swap.ts) for execution details.
 
-**User Flow:** Connect Celo Wallet → Post task (NGNm escrow auto-locks) → Hustler accepts via AI Outbound Voice Agent → Gig booked & assigned onchain → Task marked complete → Payment released → Optional swap of NGNm earnings to USDT.
+**User Flow:** Connect Celo Wallet → Post task (USDC escrow auto-locks) → Hustler accepts via AI Outbound Voice Agent → Gig booked & assigned onchain → Task marked complete → Payment released → Optional swap of NGNm earnings to USDC.
 
 
 ---

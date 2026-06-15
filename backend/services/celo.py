@@ -9,12 +9,12 @@ import httpx
 from eth_account import Account
 from eth_account.messages import encode_defunct
 
-# Celo Sepolia USDT (hackathon requirement)
+# Celo Sepolia USDC
 DEFAULT_CHAIN_ID = 11142220
 DEFAULT_RPC_URL = "https://forno.celo-sepolia.celo-testnet.org"
-DEFAULT_PAYMENT_TOKEN = "0xd077A400968890Eacc75cdc901F0356c943e4fDb"
+DEFAULT_PAYMENT_TOKEN = "0x01C5C0122039549AD1493B8220cABEdD739BC44E"
 DEFAULT_PAYMENT_DECIMALS = 6
-DEFAULT_PAYMENT_SYMBOL = "USDT"
+DEFAULT_PAYMENT_SYMBOL = "USDC"
 
 REGISTRY_ABI = [
     {

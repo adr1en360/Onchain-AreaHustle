@@ -48,7 +48,7 @@ function Landing() {
             <div className="lg:col-span-7 animate-fade-up">
               <div className="inline-flex items-center gap-2 rounded-full border bg-card px-3 py-1.5 text-xs text-muted-foreground mb-6 shadow-soft">
                 <span className="h-1.5 w-1.5 rounded-full bg-success animate-pulse" />
-                {celoEnabled ? "USDT escrow live on Celo Sepolia" : "Now matching 2,400+ hustlers across Lagos"}
+                {celoEnabled ? "USDC escrow live on Celo Sepolia" : "Now matching 2,400+ hustlers across Lagos"}
               </div>
               <h1 className="font-display text-[44px] sm:text-6xl lg:text-7xl font-bold leading-[1.02] tracking-tight">
                 Your Area. <br className="hidden sm:block" />
@@ -56,7 +56,7 @@ function Landing() {
               </h1>
               <p className="mt-6 text-lg text-muted-foreground max-w-xl">
                 The first gig marketplace that turns your everyday tasks into a verified financial passport — voice-first,
-                {celoEnabled ? " USDT escrow on Celo," : " escrow-secured,"} locally trusted.
+                {celoEnabled ? " USDC escrow on Celo," : " escrow-secured,"} locally trusted.
               </p>
               {celoEnabled && !isLoggedIn && (
                 <div className="mt-4">

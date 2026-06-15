@@ -27,7 +27,7 @@ class ConciergeIntent(BaseModel):
     neighbourhood: str
     description: str
     urgency: str
-    budget_usdt: float
+    budget_usdc: float
     merchant_id: Optional[str] = None
 
 
@@ -48,7 +48,7 @@ User request: "{body.message}"
 Available verified plumbers in directory:
 {directory_context}
 
-Extract booking intent as JSON with: category, neighbourhood, description, urgency (today/scheduled), budget_usdt (reasonable 20-80), merchant_id (best match id or null).
+Extract booking intent as JSON with: category, neighbourhood, description, urgency (today/scheduled), budget_usdc (reasonable 20-80), merchant_id (best match id or null).
 Then write a friendly 2-sentence reply suggesting top matches."""
 
     try:
@@ -65,10 +65,10 @@ Then write a friendly 2-sentence reply suggesting top matches."""
                         "neighbourhood": {"type": "string"},
                         "description": {"type": "string"},
                         "urgency": {"type": "string"},
-                        "budget_usdt": {"type": "number"},
+                        "budget_usdc": {"type": "number"},
                         "merchant_id": {"type": "string"},
                     },
-                    "required": ["reply", "category", "neighbourhood", "description", "urgency", "budget_usdt"],
+                    "required": ["reply", "category", "neighbourhood", "description", "urgency", "budget_usdc"],
                 },
             },
         )
@@ -89,13 +89,13 @@ Then write a friendly 2-sentence reply suggesting top matches."""
     merchants = merchants[:3]
 
     return ChatResponse(
-        reply=data.get("reply", "I found plumbers in Lekki Phase 1. Pick one to book with USDT escrow."),
+        reply=data.get("reply", "I found plumbers in Lekki Phase 1. Pick one to book with USDC escrow."),
         intent={
             "category": data.get("category", CATEGORY),
             "neighbourhood": data.get("neighbourhood", NEIGHBOURHOOD),
             "description": data.get("description", body.message),
             "urgency": data.get("urgency", "today"),
-            "budget_usdt": data.get("budget_usdt", 45),
+            "budget_usdc": data.get("budget_usdc", 45),
             "merchant_id": data.get("merchant_id"),
         },
         merchants=merchants,
@@ -107,14 +107,14 @@ def _fallback_parse(message: str) -> dict:
     lower = message.lower()
     budget = 45.0
     for word in lower.split():
-        if word.replace("$", "").replace("usdt", "").isdigit():
+        if word.replace("$", "").replace("usdc", "").isdigit():
             budget = float(word.replace("$", ""))
     return {
-        "reply": f"I found plumbers available in {NEIGHBOURHOOD} today. Escrow payment is in USDT on Celo.",
+        "reply": f"I found plumbers available in {NEIGHBOURHOOD} today. Escrow payment is in USDC on Celo.",
         "category": CATEGORY,
         "neighbourhood": NEIGHBOURHOOD,
         "description": message,
         "urgency": "today" if "today" in lower else "scheduled",
-        "budget_usdt": budget,
+        "budget_usdc": budget,
         "merchant_id": None,
     }

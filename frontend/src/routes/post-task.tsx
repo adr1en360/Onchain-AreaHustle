@@ -42,7 +42,7 @@ function PostTask() {
     mutationFn: async (data: any) => {
       const created = await api.createTask({ ...data, payment_mode: paymentMode });
       if (paymentMode === "onchain" && created.escrow?.task_ref) {
-        toast.info("Approve USDT and lock escrow in your wallet…");
+        toast.info("Approve USDC and lock escrow in your wallet…");
         const txHash = await fundEscrow(created.escrow.task_ref as `0x${string}`, data.budget);
         await api.confirmEscrowFund(created.id, txHash);
       }
@@ -86,12 +86,12 @@ function PostTask() {
         <h1 className="font-display text-4xl sm:text-5xl font-bold tracking-tight">Speak your task.</h1>
         <p className="text-muted-foreground mt-3 max-w-md mx-auto">
           {canPayOnchain
-            ? "Escrow locks in USDT on Celo when you publish. Hustlers get paid automatically on release."
+            ? "Escrow locks in USDC on Celo when you publish. Hustlers get paid automatically on release."
             : "Aethex listens. Gemini structures. Lock escrow when it looks right."}
         </p>
         {celoEnabled && !canPayOnchain && (
           <div className="mt-6 flex flex-col items-center gap-3">
-            <p className="text-sm text-amber-700">Connect and link your Celo wallet to pay with USDT escrow.</p>
+            <p className="text-sm text-amber-700">Connect and link your Celo wallet to pay with USDC escrow.</p>
             <WalletConnectButton />
           </div>
         )}
@@ -264,7 +264,7 @@ function PostTask() {
                     </>
                   ) : (
                     <>
-                      <Lock className="h-4 w-4" /> {canPayOnchain ? "Lock USDT escrow on Celo" : "Lock Escrow to Confirm"}
+                      <Lock className="h-4 w-4" /> {canPayOnchain ? "Lock USDC escrow on Celo" : "Lock Escrow to Confirm"}
                     </>
                   )}
                 </button>

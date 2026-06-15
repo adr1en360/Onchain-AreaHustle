@@ -5,7 +5,6 @@ import { useAuth } from "@/lib/auth-context";
 import { api } from "@/lib/api";
 import { useCeloConfig } from "@/components/CeloProvider";
 import { useCeloContracts, useCeloWallet } from "@/lib/celo/hooks";
-import { shortenAddress } from "@/lib/celo/config";
 import { CeloWalletBadge } from "@/components/CeloWalletBadge";
 import { useNavigate } from "@tanstack/react-router";
 
@@ -63,7 +62,7 @@ export function WalletConnectButton({ compact }: Props) {
       const signed = await signWalletChallenge(address, "link");
       await api.linkWallet({ address, signature: signed.signature, nonce: signed.nonce });
       await refreshUser();
-      toast.success("Wallet linked — payments use USDT escrow");
+      toast.success("Wallet linked — payments use USDC escrow");
     } catch (err: any) {
       toast.error(err.message || "Failed to link wallet");
     } finally {
@@ -126,10 +125,11 @@ export function WalletConnectButton({ compact }: Props) {
 
   return (
     <div className="flex flex-wrap items-center gap-2">
-      <span className="inline-flex items-center gap-1.5 rounded-full bg-amber-500/10 px-3 py-1.5 text-xs font-mono font-semibold text-amber-800">
-        {shortenAddress(address)}
-        {!onCeloSepolia && <span className="font-sans"> · switch to Celo Sepolia</span>}
-      </span>
+      {!onCeloSepolia && (
+        <span className="inline-flex items-center gap-1.5 rounded-full bg-amber-500/10 px-3 py-1.5 text-xs font-semibold text-amber-800">
+          switch to Celo Sepolia
+        </span>
+      )}
       {isLoggedIn && (
         <button
           onClick={handleLink}

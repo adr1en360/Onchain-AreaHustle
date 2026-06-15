@@ -70,7 +70,7 @@ function Jobs() {
     mutationFn: (id: string) => api.completeTask(id),
     onSuccess: (data, variables) => {
       if (data?.requires_escrow_release) {
-        toast.success("Job marked done! Customer will release USDT on Celo.");
+        toast.success("Job marked done! Customer will release USDC on Celo.");
       } else {
         toast.success("Job marked as done! Payment successful!.");
       }

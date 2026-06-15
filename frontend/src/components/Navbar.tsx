@@ -56,7 +56,7 @@ export function Navbar() {
                   <Link to="/post-task" className="hidden md:flex items-center gap-2 text-sm font-medium hover:text-primary transition">
                     <PlusCircle className="h-4 w-4" /> Post Task
                   </Link>
-                  {canPayOnchain ? <CeloWalletBadge compact /> : showDemoWallet ? (
+                  {showDemoWallet && !canPayOnchain ? (
                     <div className="hidden sm:flex items-center gap-2 rounded-full bg-primary/10 px-3 py-1.5 text-xs font-semibold text-primary">
                       {naira(walletBalance)}
                     </div>
@@ -74,9 +74,7 @@ export function Navbar() {
                     <Shield className="h-4 w-4 text-success" />
                     <span className="text-sm font-medium">{trustScore}</span>
                   </div>
-                  {canPayOnchain ? (
-                    <CeloWalletBadge compact />
-                  ) : showDemoWallet ? (
+                  {showDemoWallet && !canPayOnchain ? (
                     <button onClick={() => setWithdrawOpen(true)} className="hidden sm:flex rounded-full bg-primary/10 px-3 py-1.5 text-xs font-semibold text-primary">
                       <AnimatedNumber value={walletBalance} />
                     </button>

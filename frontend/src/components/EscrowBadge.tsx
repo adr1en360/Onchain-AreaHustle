@@ -13,7 +13,7 @@ export function EscrowBadge({ paymentMode, escrowStatus, compact }: Props) {
       : escrowStatus === "assigned"
         ? "Escrow assigned"
         : escrowStatus === "funded"
-          ? "USDT locked"
+          ? "USDC locked"
           : "Celo escrow";
 
   return (

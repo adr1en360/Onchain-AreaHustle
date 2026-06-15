@@ -14,7 +14,7 @@ export const CELO_SEPOLIA_CHAIN_ID = 11142220;
 export const DEFAULT_CELO_CONFIG: CeloConfig = {
   chainId: CELO_SEPOLIA_CHAIN_ID,
   rpcUrl: "https://forno.celo-sepolia.celo-testnet.org",
-  paymentSymbol: "USDT",
+  paymentSymbol: "USDC",
   platformFeeBps: 250,
   enabled: false,
 };
@@ -28,13 +28,14 @@ export function shortenAddress(address?: string | null) {
   return `${address.slice(0, 6)}…${address.slice(-4)}`;
 }
 
-export function formatUsdt(wei: bigint | undefined | null) {
-  if (wei == null) return "— USDT";
+export function formatUsdc(wei: bigint | undefined | null) {
+  if (wei == null) return "— USDC";
   const amount = Number(wei) / 1e6;
-  return `${amount.toLocaleString(undefined, { maximumFractionDigits: 2 })} USDT`;
+  return `${amount.toLocaleString(undefined, { maximumFractionDigits: 2 })} USDC`;
 }
 
-export const formatNgnm = formatUsdt;
+export const formatUsdt = formatUsdc;
+export const formatNgnm = formatUsdc;
 
 export function roleToRegistryEnum(role: string): number {
   return role === "hustler" ? 2 : 1;

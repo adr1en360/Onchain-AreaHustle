@@ -2,16 +2,16 @@ import { useQuery } from "@tanstack/react-query";
 import { useAccount, usePublicClient } from "wagmi";
 import { erc20Abi } from "./abis";
 import { useCeloConfig } from "@/components/CeloProvider";
-import { formatUsdt, formatNgnm, type CeloConfig } from "./config";
+import { formatUsdc, formatNgnm, type CeloConfig } from "./config";
 
-export function useUsdtBalance(config?: CeloConfig | null) {
+export function useUsdcBalance(config?: CeloConfig | null) {
   const { config: ctxConfig } = useCeloConfig();
   const resolved = config ?? ctxConfig;
   const { address } = useAccount();
   const publicClient = usePublicClient();
 
   return useQuery({
-    queryKey: ["usdt-balance", address, resolved.paymentToken],
+    queryKey: ["usdc-balance", address, resolved.paymentToken],
     enabled: Boolean(address && resolved.paymentToken && publicClient),
     refetchInterval: 15_000,
     queryFn: async () => {
@@ -25,7 +25,8 @@ export function useUsdtBalance(config?: CeloConfig | null) {
   });
 }
 
-export const useNgnmBalance = useUsdtBalance;
+export const useUsdtBalance = useUsdcBalance;
+export const useNgnmBalance = useUsdcBalance;
 
 export function useOnchainPayments() {
   const { config, loading } = useCeloConfig();
@@ -42,4 +43,4 @@ export function useOnchainPayments() {
   };
 }
 
-export { formatUsdt, formatNgnm };
+export { formatUsdc, formatUsdt, formatNgnm };
