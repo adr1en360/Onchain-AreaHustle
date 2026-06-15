@@ -7,11 +7,11 @@ export function Footer() {
       <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 py-12 grid gap-8 md:grid-cols-4">
         <div>
           <div className="flex items-center gap-2 mb-3">
-            <img src={logo} alt="AreaHustle Logo" className="h-8 w-auto object-contain" />
-            <span className="font-display text-lg font-bold">AreaHustle</span>
+            <img src={logo} alt="Onchain AreaHustle Logo" className="h-8 w-auto object-contain" />
+            <span className="font-display text-lg font-bold">Onchain AreaHustle</span>
           </div>
           <p className="text-sm text-muted-foreground max-w-xs">
-            The hyper-local gig marketplace that turns everyday work into a verified financial passport.
+            The onchain hyper-local gig marketplace that turns everyday work into a verified financial passport on Celo.
           </p>
         </div>
         <div>
@@ -45,7 +45,7 @@ export function Footer() {
           </ul>
         </div>
       </div>
-      <div className="border-t py-6 text-center text-xs text-muted-foreground">© 2026 AreaHustle · Lagos · Built for the informal economy.</div>
+      <div className="border-t py-6 text-center text-xs text-muted-foreground">© 2026 Onchain AreaHustle · Lagos · Built for the informal economy.</div>
     </footer>
   );
 }

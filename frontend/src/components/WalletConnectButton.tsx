@@ -7,17 +7,19 @@ import { useCeloConfig } from "@/components/CeloProvider";
 import { useCeloContracts, useCeloWallet } from "@/lib/celo/hooks";
 import { shortenAddress } from "@/lib/celo/config";
 import { CeloWalletBadge } from "@/components/CeloWalletBadge";
+import { useNavigate } from "@tanstack/react-router";
 
 type Props = {
   compact?: boolean;
 };
 
 export function WalletConnectButton({ compact }: Props) {
-  const { user, isLoggedIn, refreshUser } = useAuth();
+  const { user, isLoggedIn, refreshUser, loginWithWallet } = useAuth();
   const { config } = useCeloConfig();
   const { address, isConnected, connectWallet, disconnect, isConnecting, onCeloSepolia } = useCeloWallet();
   const { signWalletChallenge, registerOnChain } = useCeloContracts(config);
   const [busy, setBusy] = useState(false);
+  const nav = useNavigate();
 
   const linkedWallet = user?.wallet_address?.toLowerCase();
   const activeWallet = address?.toLowerCase();
@@ -26,9 +28,31 @@ export function WalletConnectButton({ compact }: Props) {
   const handleConnect = async () => {
     try {
       await connectWallet();
-      toast.success("Connected to Celo Sepolia");
+      const walletAddress = (window as any).ethereum?.selectedAddress || address;
+      if (!walletAddress) {
+        throw new Error("MetaMask or other wallet not detected.");
+      }
+      
+      if (!isLoggedIn) {
+        toast.loading("Requesting challenge signature...", { id: "wallet-connect-auth" });
+        const signed = await signWalletChallenge(walletAddress, "login");
+        const res = await loginWithWallet({
+          address: walletAddress,
+          signature: signed.signature,
+          nonce: signed.nonce,
+          role: "customer", // Default fallback if new user registers through this button
+        });
+        toast.success(res?.is_new ? "Passport created successfully!" : "Authenticated successfully", { id: "wallet-connect-auth" });
+
+        // Navigate based on role and onboarding status
+        const userRole = res?.role || "customer";
+        const targetRoute = res?.is_new && userRole === "hustler" ? "/onboarding" : userRole === "customer" ? "/customer-dashboard" : "/jobs";
+        nav({ to: targetRoute });
+      } else {
+        toast.success("Connected to Celo Sepolia");
+      }
     } catch (err: any) {
-      toast.error(err.message || "Failed to connect wallet");
+      toast.error(err.message || "Authentication failed", { id: "wallet-connect-auth" });
     }
   };
 
@@ -39,7 +63,7 @@ export function WalletConnectButton({ compact }: Props) {
       const signed = await signWalletChallenge(address, "link");
       await api.linkWallet({ address, signature: signed.signature, nonce: signed.nonce });
       await refreshUser();
-      toast.success("Wallet linked — payments use NGNm escrow");
+      toast.success("Wallet linked — payments use USDT escrow");
     } catch (err: any) {
       toast.error(err.message || "Failed to link wallet");
     } finally {

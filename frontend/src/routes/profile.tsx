@@ -11,7 +11,7 @@ import { useOnchainPayments } from "@/lib/celo/payments";
 import { shortenAddress } from "@/lib/celo/config";
 
 export const Route = createFileRoute("/profile")({
-  head: () => ({ meta: [{ title: "My Profile · AreaHustle" }] }),
+  head: () => ({ meta: [{ title: "My Profile · Onchain AreaHustle" }] }),
   component: ProfilePage,
 });
 
@@ -89,7 +89,7 @@ function ProfilePage() {
         <CeloWalletBadge />
       ) : celoEnabled ? (
         <div className="space-y-3">
-          <p className="text-sm text-muted-foreground">Connect your Celo wallet to receive NGNm payouts automatically.</p>
+          <p className="text-sm text-muted-foreground">Connect your Celo wallet to receive USDT payouts automatically.</p>
           <WalletConnectButton />
         </div>
       ) : (

@@ -7,6 +7,7 @@ from database import settings
 from bson import ObjectId
 from routes.auth import get_current_user
 from services.directory import get_merchant
+from services import celo
 
 router = APIRouter()
 
@@ -85,7 +86,7 @@ async def create_task(
             "task_ref": task_ref,
             "amount_wei": str(amount_wei),
             "amount_display": task.budget,
-            "token_symbol": "NGNm",
+            "token_symbol": settings.CELO_PAYMENT_SYMBOL,
             "status": "pending",
         }
     return response

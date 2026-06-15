@@ -78,7 +78,7 @@ async def wallet_challenge(
     body: WalletChallengeRequest,
     db: AsyncIOMotorDatabase = Depends(get_database),
 ):
-    action = body.action if body.action in ("link", "register") else "link"
+    action = body.action if body.action in ("link", "register", "login", "auth") else "link"
     try:
         normalized = celo.normalize_address(body.address)
     except ValueError:
@@ -106,6 +106,79 @@ async def wallet_challenge(
     )
 
 
+@router.post("/wallet/auth")
+async def wallet_auth(
+    body: WalletVerifyRequest,
+    db: AsyncIOMotorDatabase = Depends(get_database),
+):
+    if body.role not in ("customer", "hustler"):
+        raise HTTPException(status_code=400, detail="Invalid role")
+
+    try:
+        address = celo.normalize_address(body.address)
+    except ValueError:
+        raise HTTPException(status_code=400, detail="Invalid wallet address")
+
+    challenge = await db.wallet_challenges.find_one(
+        {"address": address, "nonce": body.nonce, "used": False}
+    )
+    if not challenge or challenge.get("expires_at") < datetime.utcnow():
+        raise HTTPException(status_code=400, detail="Challenge expired or not found")
+
+    if not celo.verify_wallet_signature(address, challenge["message"], body.signature):
+        raise HTTPException(status_code=400, detail="Invalid signature")
+
+    await db.wallet_challenges.update_one({"_id": challenge["_id"]}, {"$set": {"used": True}})
+
+    # Check if a user with this wallet address and role already exists
+    user = await db.users.find_one({"wallet_address": address, "role": body.role})
+    if user:
+        user_id = str(user["_id"])
+        user_role = user.get("role", "customer")
+        token = create_access_token({"sub": user_id, "role": user_role}, expires_delta=timedelta(days=7))
+        return {
+            "access_token": token,
+            "token_type": "bearer",
+            "user_id": user_id,
+            "wallet_address": address,
+            "is_new": False,
+            "role": user_role,
+        }
+    else:
+        # Create a new user
+        placeholder_email = f"{address[2:10]}_{body.role}@wallet.areahustle.com"
+        email_taken = await db.users.find_one({"email": placeholder_email})
+        if email_taken:
+            placeholder_email = f"{address[2:]}_{body.role}@wallet.areahustle.com"
+
+        user_doc = {
+            "email": placeholder_email,
+            "hashed_password": get_password_hash(secrets.token_urlsafe(32)),
+            "role": body.role,
+            "name": body.name or f"Wallet {address[:8]}",
+            "wallet_address": address,
+            "wallet_linked_at": datetime.utcnow(),
+            "onchain_registered": False,
+            "payment_mode_default": "onchain",
+            "language_preference": "english",
+            "wallet_balance": 0.0,
+            "created_at": datetime.utcnow(),
+        }
+        result = await db.users.insert_one(user_doc)
+        user_id = str(result.inserted_id)
+
+        token = create_access_token({"sub": user_id, "role": body.role}, expires_delta=timedelta(days=7))
+        return {
+            "access_token": token,
+            "token_type": "bearer",
+            "user_id": user_id,
+            "wallet_address": address,
+            "is_new": True,
+            "role": body.role,
+        }
+
+
+
 @router.post("/wallet/register")
 async def wallet_register(body: WalletVerifyRequest, db: AsyncIOMotorDatabase = Depends(get_database)):
     if body.role not in ("customer", "hustler"):
@@ -125,14 +198,14 @@ async def wallet_register(body: WalletVerifyRequest, db: AsyncIOMotorDatabase = 
     if not celo.verify_wallet_signature(address, challenge["message"], body.signature):
         raise HTTPException(status_code=400, detail="Invalid signature")
 
-    existing_wallet = await db.users.find_one({"wallet_address": address})
+    existing_wallet = await db.users.find_one({"wallet_address": address, "role": body.role})
     if existing_wallet:
-        raise HTTPException(status_code=400, detail="Wallet already registered")
+        raise HTTPException(status_code=400, detail="Wallet already registered for this role")
 
-    placeholder_email = f"{address[2:10]}@wallet.areahustle.local"
+    placeholder_email = f"{address[2:10]}_{body.role}@wallet.areahustle.com"
     email_taken = await db.users.find_one({"email": placeholder_email})
     if email_taken:
-        placeholder_email = f"{address[2:]}@wallet.areahustle.local"
+        placeholder_email = f"{address[2:]}_{body.role}@wallet.areahustle.com"
 
     user_doc = {
         "email": placeholder_email,
@@ -181,9 +254,9 @@ async def wallet_link(
     if not celo.verify_wallet_signature(address, challenge["message"], body.signature):
         raise HTTPException(status_code=400, detail="Invalid signature")
 
-    taken = await db.users.find_one({"wallet_address": address, "_id": {"$ne": current_user["_id"]}})
+    taken = await db.users.find_one({"wallet_address": address, "role": current_user.get("role"), "_id": {"$ne": current_user["_id"]}})
     if taken:
-        raise HTTPException(status_code=400, detail="Wallet already linked to another account")
+        raise HTTPException(status_code=400, detail="Wallet already linked to another account with this role")
 
     await db.users.update_one(
         {"_id": current_user["_id"]},

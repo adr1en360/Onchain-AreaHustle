@@ -18,3 +18,6 @@
 | **`FAILED_ATTEMPTS.md`** | **The Log:** Record of technical dead-ends. | When an approach fails. |
 | **`council_review.md`** *(artifact)* | **Pre-pivot Review:** 6-critic analysis on v1.0 concept. Historical. | Reference only. |
 | **`council_review_v2.md`** *(artifact)* | **Post-pivot Review:** 4-critic pitch panel on v2.0 concept. Contains edge case resolutions, competitive matrix, and concept definition. | Before pitch prep. |
+| **`implementation_plan.md`** *(artifact)* | **Celo Agent & Hackathon Registration Plan:** Steps to register the AreaHustle AI agent onchain (ERC-8004) and submit the project to Celo Builders. | Before registration. |
+| **`task.md`** *(artifact)* | **Task Checklist:** A living checklist tracking execution progress of the wallet auth flow and visual refinements. | During auth implementation. |
+| **`walkthrough.md`** *(artifact)* | **Registration Walkthrough:** Summary of the steps taken to register the AI agent onchain and publish the hackathon project submission. | After implementation completion. |

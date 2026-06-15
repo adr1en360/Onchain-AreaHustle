@@ -26,7 +26,7 @@ export function PageLoader() {
         <div className="relative">
           <span className="absolute inset-0 rounded-2xl bg-primary/30 animate-voice-pulse" />
           <div className="relative h-16 w-16 rounded-2xl bg-card border flex items-center justify-center shadow-elevated p-3">
-            <img src={logo} alt="AreaHustle Loader" className="h-full w-full object-contain" />
+            <img src={logo} alt="Onchain AreaHustle Loader" className="h-full w-full object-contain" />
           </div>
         </div>
         <div className="flex items-center gap-1.5">
@@ -41,7 +41,7 @@ export function PageLoader() {
             />
           ))}
         </div>
-        <div className="text-[11px] uppercase tracking-[0.25em] text-muted-foreground">AreaHustle</div>
+        <div className="text-[11px] uppercase tracking-[0.25em] text-muted-foreground">Onchain AreaHustle</div>
       </div>
     </div>
   );

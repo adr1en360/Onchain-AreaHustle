@@ -10,7 +10,7 @@ import { EscrowBadge } from "@/components/EscrowBadge";
 import { useOnchainPayments } from "@/lib/celo/payments";
 
 export const Route = createFileRoute("/jobs")({
-  head: () => ({ meta: [{ title: "Job Feed · AreaHustle" }] }),
+  head: () => ({ meta: [{ title: "Job Feed · Onchain AreaHustle" }] }),
   component: Jobs,
 });
 
@@ -70,7 +70,7 @@ function Jobs() {
     mutationFn: (id: string) => api.completeTask(id),
     onSuccess: (data, variables) => {
       if (data?.requires_escrow_release) {
-        toast.success("Job marked done! Customer will release NGNm on Celo.");
+        toast.success("Job marked done! Customer will release USDT on Celo.");
       } else {
         toast.success("Job marked as done! Payment successful!.");
       }

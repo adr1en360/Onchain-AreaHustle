@@ -83,11 +83,13 @@ export const api = {
 
   // Celo
   getCeloConfig: () => fetchApi("/celo/config"),
-  getWalletChallenge: (address: string, action: "link" | "register" = "link") =>
+  getWalletChallenge: (address: string, action: "link" | "register" | "login" | "auth" = "link") =>
     fetchApi("/celo/wallet/challenge", {
       method: "POST",
       body: JSON.stringify({ address, action }),
     }),
+  walletAuth: (data: { address: string; signature: string; nonce: string; role?: string; name?: string }) =>
+    fetchApi("/celo/wallet/auth", { method: "POST", body: JSON.stringify(data) }),
   walletRegister: (data: { address: string; signature: string; nonce: string; role: string; name?: string }) =>
     fetchApi("/celo/wallet/register", { method: "POST", body: JSON.stringify(data) }),
   linkWallet: (data: { address: string; signature: string; nonce: string }) =>
