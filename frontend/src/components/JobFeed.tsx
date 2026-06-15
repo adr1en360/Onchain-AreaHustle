@@ -44,7 +44,7 @@ export function JobFeed() {
         {/* This would be a map over your fetched jobs from /api/v1/tasks/ */}
         <div className="border p-4 rounded-lg shadow-sm bg-white flex flex-col">
           <h3 className="font-bold text-lg">Fix Generator</h3>
-          <span className="text-sm text-gray-500 mb-2">📍 Lekki Phase 1 • 💰 ₦8,000</span>
+          <span className="text-sm text-gray-500 mb-2">📍 Lekki Phase 1 • 💰 25 USDC</span>
           <p className="text-sm mb-4 line-clamp-2">
             My generator has been making a weird noise and suddenly stopped. I need someone to check the carburetor.
           </p>

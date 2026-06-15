@@ -4,7 +4,7 @@ import { useAuth } from "@/lib/auth-context";
 import { AuthModal } from "@/components/AuthModal";
 import { WalletConnectButton } from "@/components/WalletConnectButton";
 import { useOnchainPayments } from "@/lib/celo/payments";
-import { naira } from "@/lib/format";
+import { usdc } from "@/lib/format";
 import heroHustler from "@/assets/hero-hustler.jpg";
 import estate from "@/assets/estate.jpg";
 import h1 from "@/assets/hustler-1.jpg";
@@ -144,7 +144,7 @@ function Landing() {
                     <div className="text-xs text-muted-foreground mb-1">Parsed by Gemini</div>
                     <div className="flex flex-wrap gap-2 text-xs">
                       <span className="rounded-full bg-card px-2.5 py-1 border">Generator Servicing</span>
-                      <span className="rounded-full bg-card px-2.5 py-1 border">₦8,000</span>
+                      <span className="rounded-full bg-card px-2.5 py-1 border">25 USDC</span>
                       <span className="rounded-full bg-card px-2.5 py-1 border">Lekki Phase 1</span>
                     </div>
                   </div>
@@ -157,7 +157,7 @@ function Landing() {
                 <div className="rounded-[28px] bg-gradient-to-br from-emerald-600 to-emerald-800 text-white p-5 shadow-lg shadow-emerald-700/25 flex flex-col justify-between hover-card-trigger">
                   <div>
                     <div className="text-xs/relaxed opacity-70">Escrow Locked</div>
-                    <div className="font-display text-3xl font-bold mt-1">{naira(8000)}</div>
+                    <div className="font-display text-3xl font-bold mt-1">{usdc(25)}</div>
                   </div>
                   <div className="flex items-center gap-1.5 text-xs opacity-80">
                     <Lock className="h-3 w-3" /> Auto-release on completion
@@ -267,7 +267,7 @@ function Landing() {
               <h3 className="font-display text-4xl font-bold leading-tight">A new onchain financial fabric, woven one job at a time.</h3>
             </div>
             {[
-              { v: "₦1.2B+", l: "Escrowed since launch" },
+              { v: "$1.2M+", l: "USDC escrowed since launch" },
               { v: "12,000", l: "Active hustlers" },
               { v: "98%", l: "On-time releases" },
               { v: "2.4M", l: "Voice tasks parsed" },

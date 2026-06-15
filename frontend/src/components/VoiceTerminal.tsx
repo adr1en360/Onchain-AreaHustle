@@ -46,7 +46,7 @@ export function VoiceTerminal() {
       isNew: true,
     });
     toast.success("Task posted to your area", {
-      description: `${SAMPLE.title} · ₦${SAMPLE.budget.toLocaleString("en-NG")}`,
+      description: `${SAMPLE.title} · ${SAMPLE.budget} USDC`,
     });
     close();
     navigate({ to: "/jobs" });
@@ -127,7 +127,7 @@ export function VoiceTerminal() {
                   <div className="font-display text-lg font-bold mb-3">{SAMPLE.title}</div>
                   <div className="flex flex-wrap gap-2">
                     <Chip label="Category" value={SAMPLE.cat} />
-                    <Chip label="Budget" value={`₦${SAMPLE.budget.toLocaleString("en-NG")}`} />
+                    <Chip label="Budget" value={`${SAMPLE.budget} USDC`} />
                     <Chip label="Location" value={SAMPLE.area} />
                   </div>
                 </div>

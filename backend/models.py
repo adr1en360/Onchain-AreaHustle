@@ -59,10 +59,12 @@ class HustlerProfileCreate(BaseModel):
 class Task(BaseModel):
     id: Optional[str] = Field(None, alias="_id")
     customer_id: str
+    title: str = ""
     category: str
     description: str
     budget: float
     neighbourhood: str
+    location: Optional[str] = None
     status: str = "open"  # open, matched, active, completed, disputed
     matched_hustler_id: Optional[str] = None
     matched_hustler_wallet: Optional[str] = None
@@ -82,14 +84,25 @@ class Task(BaseModel):
     completed_at: Optional[datetime] = None
 
 class TaskCreate(BaseModel):
+    title: str = ""
     category: str
     description: str
     budget: float
     neighbourhood: str
+    location: Optional[str] = None
     voice_transcript: Optional[str] = None
     payment_mode: str = "onchain"
     merchant_id: Optional[str] = None
     hustler_wallet: Optional[str] = None
+
+class TaskUpdate(BaseModel):
+    title: Optional[str] = None
+    category: Optional[str] = None
+    description: Optional[str] = None
+    budget: Optional[float] = None
+    neighbourhood: Optional[str] = None
+    location: Optional[str] = None
+    status: Optional[str] = None
 
 class Transaction(BaseModel):
     id: Optional[str] = Field(None, alias="_id")
