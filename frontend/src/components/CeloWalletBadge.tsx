@@ -28,7 +28,7 @@ export function CeloWalletBadge({ compact, showBalance = true }: Props) {
         title={showBalance ? formatUsdt(balance) : undefined}
       >
         <Wallet className="h-3 w-3" />
-        {showBalance && balance != null ? formatUsdt(balance) : shortenAddress(address)}
+        {showBalance && balance != null ? formatUsdt(balance) : <span className="font-mono">{shortenAddress(address)}</span>}
       </a>
     );
   }
@@ -38,7 +38,7 @@ export function CeloWalletBadge({ compact, showBalance = true }: Props) {
       <div className="flex items-start justify-between gap-3">
         <div>
           <div className="text-[10px] uppercase tracking-widest text-emerald-700 font-semibold">Celo Wallet</div>
-          <div className="font-display text-lg font-bold mt-1">{shortenAddress(address)}</div>
+          <div className="font-mono text-base font-bold mt-1 tracking-tight">{shortenAddress(address)}</div>
           {!onCeloSepolia && <p className="text-xs text-amber-600 mt-1">Switch network to Celo Sepolia</p>}
         </div>
         <button onClick={() => refetch()} className="text-muted-foreground hover:text-foreground" title="Refresh balance">

@@ -97,7 +97,7 @@ function ProfilePage() {
       )}
       {user?.wallet_address && (
         <p className="text-xs text-muted-foreground mt-3">
-          Linked: {shortenAddress(user.wallet_address)}
+          Linked: <span className="font-mono bg-muted px-1.5 py-0.5 rounded text-[11px] text-amber-800 font-medium">{shortenAddress(user.wallet_address)}</span>
           {user.onchain_registered && " · On-chain profile verified"}
         </p>
       )}
