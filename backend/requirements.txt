@@ -11,3 +11,5 @@ python-jose[cryptography]>=3.3.0
 uvicorn>=0.48.0
 python-multipart>=0.0.9
 email-validator>=2.1.0
+eth-account>=0.13.7
+eth-utils>=5.3.1
