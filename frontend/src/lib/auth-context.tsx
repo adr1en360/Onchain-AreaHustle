@@ -15,11 +15,31 @@ type AuthContextType = {
   setLanguage: (lang: string) => void;
   areas: string[];
   setAreas: (areas: string[]) => void;
+  refreshUser: () => Promise<any>;
+  loginWithToken: (accessToken: string) => Promise<any>;
   updateDemoBalance: (role: string, amount: number) => void;
   addDemoTransaction: (txn: any) => void;
+  usesOnchainWallet: boolean;
 };
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
+
+function enrichUser(u: any) {
+  if (!u) return u;
+  if (u.wallet_address) return { ...u, usesOnchainWallet: true };
+
+  const isCustomer = u.role === "customer";
+  if (isCustomer && !localStorage.getItem("demo_customer_balance")) {
+    localStorage.setItem("demo_customer_balance", "1000000");
+  }
+  if (!isCustomer && !localStorage.getItem("demo_hustler_balance")) {
+    localStorage.setItem("demo_hustler_balance", "0");
+  }
+
+  const balance = parseInt(localStorage.getItem(isCustomer ? "demo_customer_balance" : "demo_hustler_balance") || "0");
+  const trustScore = parseInt(localStorage.getItem("demo_hustler_trust") || "820");
+  return { ...u, wallet_balance: balance, trust_score: trustScore, usesOnchainWallet: false };
+}
 
 export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [token, setToken] = useState<string | null>(localStorage.getItem("token"));
@@ -28,62 +48,6 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [language, setLanguage] = useState("English");
   const [areas, setAreas] = useState<string[]>([]);
 
-  const syncDemoState = (u: any) => {
-    if (!u) return u;
-    const isCustomer = u.role === "customer";
-
-    if (isCustomer && !localStorage.getItem("demo_customer_balance")) {
-      localStorage.setItem("demo_customer_balance", "1000000");
-    }
-    if (!isCustomer && !localStorage.getItem("demo_hustler_balance")) {
-      localStorage.setItem("demo_hustler_balance", "0");
-    }
-
-    const balance = parseInt(localStorage.getItem(isCustomer ? "demo_customer_balance" : "demo_hustler_balance") || "0");
-    const trustScore = parseInt(localStorage.getItem("demo_hustler_trust") || "820");
-    return { ...u, wallet_balance: balance, trust_score: trustScore };
-  };
-
-  useEffect(() => {
-    if (token) {
-      setIsLoading(true);
-      api
-        .getMe()
-        .then((u) => {
-          setUser(syncDemoState(u));
-          setIsLoading(false);
-        })
-        .catch(() => {
-          logout();
-          setIsLoading(false);
-        });
-    } else {
-      setIsLoading(false);
-    }
-  }, [token]);
-
-  useEffect(() => {
-    const handleStorage = () => {
-      setUser((prev: any) => syncDemoState(prev));
-    };
-    window.addEventListener("storage", handleStorage);
-    return () => window.removeEventListener("storage", handleStorage);
-  }, []);
-
-  const login = async (data: any) => {
-    const res = await api.login(data);
-    localStorage.setItem("token", res.access_token);
-    setToken(res.access_token);
-    const u = await api.getMe();
-    setUser(syncDemoState(u));
-    return syncDemoState(u);
-  };
-
-  const register = async (data: any) => {
-    await api.register(data);
-    return await login({ username: data.email, password: data.password });
-  };
-
   const logout = () => {
     localStorage.removeItem("token");
     setToken(null);
@@ -91,35 +55,59 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     toast.info("Logged out successfully");
   };
 
+  const refreshUser = async () => {
+    const u = await api.getMe();
+    setUser(enrichUser(u));
+    return enrichUser(u);
+  };
+
+  useEffect(() => {
+    if (token) {
+      setIsLoading(true);
+      refreshUser()
+        .catch(() => logout())
+        .finally(() => setIsLoading(false));
+    } else {
+      setIsLoading(false);
+    }
+  }, [token]);
+
+  const loginWithToken = async (accessToken: string) => {
+    localStorage.setItem("token", accessToken);
+    setToken(accessToken);
+    return refreshUser();
+  };
+
+  const login = async (data: any) => {
+    const res = await api.login(data);
+    localStorage.setItem("token", res.access_token);
+    setToken(res.access_token);
+    return refreshUser();
+  };
+
+  const register = async (data: any) => {
+    await api.register(data);
+    return await login({ username: data.email, password: data.password });
+  };
+
   const updateDemoBalance = (role: string, amount: number) => {
+    if (user?.wallet_address) return;
     const key = role === "customer" ? "demo_customer_balance" : "demo_hustler_balance";
     const current = parseInt(localStorage.getItem(key) || (role === "customer" ? "1000000" : "0"));
     const newBalance = current + Number(amount);
     localStorage.setItem(key, newBalance.toString());
-
-    setUser((prev: any) => {
-      if (prev && prev.role === role) {
-        return { ...prev, wallet_balance: newBalance };
-      }
-      return prev;
-    });
+    setUser((prev: any) => (prev && prev.role === role ? { ...prev, wallet_balance: newBalance } : prev));
   };
 
   const addDemoTransaction = (txn: any) => {
+    if (user?.wallet_address) return;
     const txns = JSON.parse(localStorage.getItem("demo_transactions") || "[]");
     txns.unshift(txn);
     localStorage.setItem("demo_transactions", JSON.stringify(txns));
-
     const trust = parseInt(localStorage.getItem("demo_hustler_trust") || "820");
     const newTrust = Math.min(1000, trust + 15);
     localStorage.setItem("demo_hustler_trust", newTrust.toString());
-
-    setUser((prev: any) => {
-      if (prev && prev.role === "hustler") {
-        return { ...prev, trust_score: newTrust };
-      }
-      return prev;
-    });
+    setUser((prev: any) => (prev?.role === "hustler" ? { ...prev, trust_score: newTrust } : prev));
   };
 
   return (
@@ -137,8 +125,11 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         setLanguage,
         areas,
         setAreas,
+        refreshUser,
+        loginWithToken,
         updateDemoBalance,
         addDemoTransaction,
+        usesOnchainWallet: Boolean(user?.wallet_address),
       }}
     >
       {children}

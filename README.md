@@ -21,6 +21,23 @@ AreaHustle is a voice-first hyper-local gig marketplace that turns everyday work
 - **Database:** [MongoDB](https://www.mongodb.com/) (Async with Motor Driver)
 - **Voice AI Platform:** [Aethex API](https://developers.aethexai.com/)
 - **Large Language Model:** [Google Gemini Flash](https://ai.google.dev/)
+- **On-chain (Celo Sepolia):** NGNm escrow via `TaskEscrow`, optional wallet sign-up via `AreaHustleRegistry`, wagmi + viem frontend
+
+---
+
+## ⛓️ Celo On-Chain Payments
+
+Contracts are deployed on **Celo Sepolia** (chain `11142220`):
+
+| Contract | Address |
+|----------|---------|
+| AreaHustleRegistry | `0x2eF4B39664eC55E813bB90703D875a0402C82986` |
+| TaskEscrow | `0x7E715F08bA9094475Fa66D3761b42d91b81689C2` |
+| NGNm token | `0x3d5ae86F34E2a82771496D140daFAEf3789dF888` |
+
+**Redeploy:** set `PRIVATE_KEY` in root `.env`, then `npm run deploy:sepolia && npm run sync:env`
+
+**User flow:** Connect Celo wallet → Link → Post task (NGNm escrow auto-locks) → Hustler accepts → Assign on-chain → Mark done → Release payment.
 
 ---
 

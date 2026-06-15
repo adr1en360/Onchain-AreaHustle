@@ -1,6 +1,9 @@
 **/__pycache__ /
 .venv/
 .env
+frontend/.env
+backend/.env
 *.pyc
 .uv
 skills/
+node_modules

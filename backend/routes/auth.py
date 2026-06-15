@@ -119,5 +119,8 @@ async def read_users_me(current_user: dict = Depends(get_current_user)):
         role=current_user.get("role"),
         name=current_user.get("name", ""),
         wallet_balance=current_user.get("wallet_balance", 0.0),
+        wallet_address=current_user.get("wallet_address"),
+        onchain_registered=current_user.get("onchain_registered", False),
+        payment_mode_default=current_user.get("payment_mode_default", "demo"),
         language_preference=current_user.get("language_preference", "english"),
     )

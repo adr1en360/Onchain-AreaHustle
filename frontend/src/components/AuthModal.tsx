@@ -1,11 +1,17 @@
 import React, { useState, useEffect } from "react";
 import { useAuth } from "@/lib/auth-context";
-import { X, Loader2 } from "lucide-react";
+import { X, Loader2, Wallet } from "lucide-react";
 import { toast } from "sonner";
 import { useNavigate } from "@tanstack/react-router";
+import { useCeloConfig } from "@/components/CeloProvider";
+import { useCeloContracts, useCeloWallet } from "@/lib/celo/hooks";
+import { api } from "@/lib/api";
 
 export function AuthModal({ open, onClose, initialRole, initialMode }: any) {
-  const { login, register } = useAuth();
+  const { login, register, loginWithToken } = useAuth();
+  const { config } = useCeloConfig();
+  const { address, connectWallet, isConnected } = useCeloWallet();
+  const { signWalletChallenge } = useCeloContracts(config);
   const [mode, setMode] = useState(initialMode || "login");
   const [role, setRole] = useState(initialRole || "customer");
   const [email, setEmail] = useState("");
@@ -42,6 +48,36 @@ export function AuthModal({ open, onClose, initialRole, initialMode }: any) {
       nav({ to: targetRoute });
     } catch (err: any) {
       toast.error(err.message || "Authentication failed");
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleWalletRegister = async () => {
+    setLoading(true);
+    try {
+      let walletAddress = address;
+      if (!isConnected || !walletAddress) {
+        await connectWallet();
+        walletAddress = (window as any).ethereum?.selectedAddress;
+      }
+      if (!walletAddress) throw new Error("Connect a wallet first");
+
+      const signed = await signWalletChallenge(walletAddress, "register");
+      const res = await api.walletRegister({
+        address: walletAddress,
+        signature: signed.signature,
+        nonce: signed.nonce,
+        role,
+        name: name || `Wallet ${walletAddress.slice(0, 8)}`,
+      });
+      await loginWithToken(res.access_token);
+      toast.success("Wallet account created");
+      onClose();
+      const targetRoute = role === "hustler" ? "/onboarding" : "/customer-dashboard";
+      nav({ to: targetRoute });
+    } catch (err: any) {
+      toast.error(err.message || "Wallet sign-up failed");
     } finally {
       setLoading(false);
     }
@@ -127,6 +163,20 @@ export function AuthModal({ open, onClose, initialRole, initialMode }: any) {
               {mode === "login" ? "Don't have an account? Sign up" : "Already have an account? Log in"}
             </button>
           </div>
+
+          {mode === "register" && config.enabled && (
+            <div className="mt-6 border-t pt-6">
+              <p className="text-xs text-muted-foreground text-center mb-3">Optional: sign up with Celo wallet only</p>
+              <button
+                type="button"
+                onClick={handleWalletRegister}
+                disabled={loading}
+                className="w-full rounded-full border py-3 text-sm font-semibold flex justify-center items-center gap-2 hover:bg-muted transition"
+              >
+                <Wallet className="h-4 w-4" /> Sign up with Celo Wallet
+              </button>
+            </div>
+          )}
         </form>
       </div>
     </div>

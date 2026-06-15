@@ -11,10 +11,17 @@ class Settings(BaseSettings):
     GEMINI_API_KEY: str = ""
     AETHEX_FROM_NUMBER: str = ""
     AH_CALLBACK_URL: str = ""
+    CELO_RPC_URL: str = "https://forno.celo-sepolia.celo-testnet.org"
+    CELO_CHAIN_ID: int = 11142220
+    CELO_REGISTRY_ADDRESS: str = ""
+    CELO_ESCROW_ADDRESS: str = ""
+    CELO_PAYMENT_TOKEN: str = "0xd077A400968890Eacc75cdc901F0356c943e4fDb"
+    CELO_PAYMENT_DECIMALS: int = 6
+    CELO_PAYMENT_SYMBOL: str = "USDT"
 
     model_config = SettingsConfigDict(
-        env_file=".env",
-        extra="ignore"
+        env_file=(".env", "../.env"),
+        extra="ignore",
     )
 
 settings = Settings()
@@ -29,6 +36,8 @@ async def init_db():
     await db.hustler_profiles.create_index([("service_areas", 1), ("trust_score", -1)])
     # Users: Unique email
     await db.users.create_index("email", unique=True)
+    await db.users.create_index("wallet_address", unique=True, sparse=True)
+    await db.wallet_challenges.create_index("expires_at", expireAfterSeconds=0)
     # Transactions: user_id + type index
     await db.transactions.create_index([("user_id", 1), ("timestamp", -1)])
 

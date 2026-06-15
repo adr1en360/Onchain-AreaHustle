@@ -4,6 +4,7 @@ import { useEffect, type ReactNode } from "react";
 
 import appCss from "../styles.css?url";
 import { AuthProvider } from "@/lib/auth-context";
+import { CeloProvider } from "@/components/CeloProvider";
 import { Navbar } from "@/components/Navbar";
 import { Footer } from "@/components/Footer";
 import { VoiceTerminal } from "@/components/VoiceTerminal";
@@ -122,16 +123,18 @@ function RootComponent() {
   const { queryClient } = Route.useRouteContext();
   return (
     <QueryClientProvider client={queryClient}>
-      <AuthProvider>
-        <PageLoader />
-        <Navbar />
-        <main className="min-h-[calc(100vh-4rem)]">
-          <Outlet />
-        </main>
-        <Footer />
-        {/* <VoiceTerminal /> */}
-        <Toaster position="top-right" richColors />
-      </AuthProvider>
+      <CeloProvider>
+        <AuthProvider>
+          <PageLoader />
+          <Navbar />
+          <main className="min-h-[calc(100vh-4rem)]">
+            <Outlet />
+          </main>
+          <Footer />
+          {/* <VoiceTerminal /> */}
+          <Toaster position="top-right" richColors />
+        </AuthProvider>
+      </CeloProvider>
     </QueryClientProvider>
   );
 }

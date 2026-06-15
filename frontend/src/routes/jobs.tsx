@@ -4,8 +4,10 @@ import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { useAuth } from "@/lib/auth-context";
 import { api } from "@/lib/api";
 import { naira } from "@/lib/format";
-import { MapPin, Lock, Sparkles, Phone, CheckCircle, Search, Mic, X } from "lucide-react";
+import { MapPin, Lock, Sparkles, Phone, CheckCircle, Search, X } from "lucide-react";
 import { toast } from "sonner";
+import { EscrowBadge } from "@/components/EscrowBadge";
+import { useOnchainPayments } from "@/lib/celo/payments";
 
 export const Route = createFileRoute("/jobs")({
   head: () => ({ meta: [{ title: "Job Feed · AreaHustle" }] }),
@@ -14,6 +16,7 @@ export const Route = createFileRoute("/jobs")({
 
 function Jobs() {
   const { isLoggedIn, isLoading: authLoading, userRole, user, updateDemoBalance, addDemoTransaction } = useAuth();
+  const { canPayOnchain } = useOnchainPayments();
   const nav = useNavigate();
   const queryClient = useQueryClient();
   const [tab, setTab] = useState<"market" | "my-gigs">("market");
@@ -40,8 +43,12 @@ function Jobs() {
 
   const acceptMutation = useMutation({
     mutationFn: (id: string) => api.matchTask(id),
-    onSuccess: () => {
-      toast.success("Job accepted! Contact details unlocked.");
+    onSuccess: (data) => {
+      if (data.requires_escrow_assign) {
+        toast.success("Job accepted! Customer will assign you on-chain.");
+      } else {
+        toast.success("Job accepted! Contact details unlocked.");
+      }
       queryClient.invalidateQueries({ queryKey: ["marketJobs"] });
       queryClient.invalidateQueries({ queryKey: ["myGigs"] });
       setTab("my-gigs");
@@ -62,10 +69,14 @@ function Jobs() {
   const completeMutation = useMutation({
     mutationFn: (id: string) => api.completeTask(id),
     onSuccess: (data, variables) => {
-      toast.success("Job marked as done! Payment successful!.");
+      if (data?.requires_escrow_release) {
+        toast.success("Job marked done! Customer will release NGNm on Celo.");
+      } else {
+        toast.success("Job marked as done! Payment successful!.");
+      }
 
       const job = myGigs.find((j: any) => (j.id || j._id) == variables);
-      if (job) {
+      if (job && job.payment_mode !== "onchain") {
         const amount = Number(job.budget) || 0;
         updateDemoBalance("customer", -amount);
         updateDemoBalance("hustler", amount);
@@ -84,8 +95,13 @@ function Jobs() {
     },
   });
 
-  const handleAccept = (e: React.MouseEvent, id: string) => {
+  const handleAccept = (e: React.MouseEvent, job: any) => {
     e.stopPropagation();
+    const id = job.id || job._id;
+    if (job.payment_mode === "onchain" && !user?.wallet_address) {
+      toast.error("Link your Celo wallet in the navbar to accept on-chain paid jobs.");
+      return;
+    }
     acceptMutation.mutate(id);
   };
 
@@ -165,7 +181,10 @@ function Jobs() {
                 className="rounded-3xl bg-card border shadow-soft hover:shadow-elevated transition p-6 flex flex-col animate-fade-up relative overflow-hidden"
                 style={{ animationDelay: `${i * 40}ms` }}
               >
-                <div className="text-[10px] uppercase tracking-widest text-muted-foreground mb-1">{j.category}</div>
+                <div className="text-[10px] uppercase tracking-widest text-muted-foreground mb-1 flex items-center gap-2">
+                  {j.category}
+                  <EscrowBadge paymentMode={j.payment_mode} compact />
+                </div>
                 <h3 className="font-display text-xl font-bold leading-snug mb-2">{(j as any).title || j.category}</h3>
                 {j.description && <p className="text-sm text-muted-foreground mb-4 line-clamp-2">{j.description}</p>}
                 <div className="flex flex-wrap items-center gap-x-4 gap-y-2 text-xs text-muted-foreground mb-5">
@@ -190,7 +209,7 @@ function Jobs() {
                       View Details
                     </button>
                     <button
-                      onClick={(e) => handleAccept(e, j.id || j._id)}
+                      onClick={(e) => handleAccept(e, j)}
                       className="inline-flex items-center gap-1.5 rounded-full bg-primary px-4 py-2 text-xs font-semibold text-primary-foreground hover:opacity-95 transition"
                     >
                       <Lock className="h-3.5 w-3.5" /> Accept
@@ -219,7 +238,7 @@ function Jobs() {
               >
                 <div>
                   <span
-                    className={`text-[10px] font-semibold uppercase tracking-widest px-2 py-0.5 rounded-full mb-2 inline-block ${status === "accepted" || status === "matched" || status === "in_progress" || status === "active" ? "bg-primary/10 text-primary" : status === "awaiting_confirmation" ? "bg-orange-500/10 text-orange-600" : "bg-success/10 text-success"}`}
+                    className={`text-[10px] font-semibold uppercase tracking-widest px-2 py-0.5 rounded-full mb-2 inline-flex items-center gap-2 ${status === "accepted" || status === "matched" || status === "in_progress" || status === "active" ? "bg-primary/10 text-primary" : status === "awaiting_confirmation" ? "bg-orange-500/10 text-orange-600" : "bg-success/10 text-success"}`}
                   >
                     {status === "accepted" || status === "matched"
                       ? "Matched"
@@ -229,12 +248,18 @@ function Jobs() {
                           ? "Awaiting Confirmation"
                           : "Completed"}
                   </span>
+                  <EscrowBadge paymentMode={j.payment_mode} escrowStatus={j.escrow_status} compact />
                   <h3 className="font-display text-xl font-bold">{(j as any).title || j.category}</h3>
                   <div className="flex items-center gap-4 text-sm text-muted-foreground mt-2">
                     <span className="flex items-center gap-1 text-foreground">
                       <MapPin className="h-4 w-4 text-primary" /> Exact Location Revealed
                     </span>
-                    <span className="flex items-center gap-1 font-semibold text-success">{naira(j.budget)} Locked</span>
+                    <span className="flex items-center gap-1 font-semibold text-success">
+                      {naira(j.budget)} Locked
+                      {j.payment_mode === "onchain" && (
+                        <span className="text-[10px] font-normal text-emerald-600 ml-1">· Celo</span>
+                      )}
+                    </span>
                   </div>
                 </div>
                 <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-3 mt-4 sm:mt-0 w-full sm:w-auto">
@@ -243,13 +268,19 @@ function Jobs() {
                       <button className="flex items-center justify-center gap-2 rounded-full border px-4 py-2.5 text-sm font-semibold hover:bg-muted transition">
                         <Phone className="h-4 w-4" /> Call Customer
                       </button>
-                      <button
-                        onClick={() => handleActivate(j.id || j._id)}
-                        disabled={activateMutation.isPending}
-                        className="flex items-center justify-center gap-2 rounded-full bg-primary text-primary-foreground px-4 py-2.5 text-sm font-semibold hover:opacity-95 transition"
-                      >
-                        Start Job
-                      </button>
+                      {j.payment_mode === "onchain" && j.escrow_status !== "assigned" ? (
+                        <span className="text-xs text-muted-foreground italic px-2">
+                          Waiting for customer to assign you on-chain…
+                        </span>
+                      ) : (
+                        <button
+                          onClick={() => handleActivate(j.id || j._id)}
+                          disabled={activateMutation.isPending}
+                          className="flex items-center justify-center gap-2 rounded-full bg-primary text-primary-foreground px-4 py-2.5 text-sm font-semibold hover:opacity-95 transition"
+                        >
+                          Start Job
+                        </button>
+                      )}
                     </>
                   ) : status === "in_progress" || status === "active" ? (
                     <>
@@ -304,7 +335,7 @@ function Jobs() {
                 <button
                   onClick={(e) => {
                     setSelectedJob(null);
-                    handleAccept(e, selectedJob.id || selectedJob._id);
+                    handleAccept(e, selectedJob);
                   }}
                   className="flex items-center justify-center gap-2 rounded-full bg-primary text-primary-foreground px-4 py-2.5 text-sm font-semibold hover:opacity-95 transition"
                 >

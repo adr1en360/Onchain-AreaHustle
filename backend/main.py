@@ -3,7 +3,7 @@ from fastapi.middleware.cors import CORSMiddleware
 from fastapi.openapi.docs import get_redoc_html, get_swagger_ui_html, get_swagger_ui_oauth2_redirect_html
 from fastapi.staticfiles import StaticFiles
 import os
-from routes import auth, tasks, users, passport, transactions
+from routes import auth, tasks, users, passport, transactions, celo, directory, concierge, self_agent
 from database import init_db
 
 app = FastAPI(
@@ -63,8 +63,12 @@ app.include_router(tasks.router, prefix="/api/v1/tasks", tags=["Tasks"])
 app.include_router(users.router, prefix="/api/v1/users", tags=["Users"])
 app.include_router(passport.router, prefix="/api/v1/passport", tags=["Passport"])
 app.include_router(transactions.router, prefix="/api/v1/transactions", tags=["Transactions"])
+app.include_router(celo.router, prefix="/api/v1/celo", tags=["Celo"])
+app.include_router(directory.router, prefix="/api/v1/directory", tags=["Directory"])
+app.include_router(concierge.router, prefix="/api/v1/concierge", tags=["Concierge"])
+app.include_router(self_agent.router, prefix="/api/v1/self", tags=["Self Agent ID"])
 
 @app.get("/")
 async def root():
-    return {"message": "Welcome to AreaHustle API v3.0"}
+    return {"message": "AreaHustle Local Commerce Concierge API", "city": "Lagos", "category": "Plumbing"}
 

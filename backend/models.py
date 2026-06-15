@@ -11,6 +11,10 @@ class User(BaseModel):
     kyc_tier: int = 1
     kyc_status: str = "pending"
     wallet_balance: float = 0.0
+    wallet_address: Optional[str] = None
+    onchain_registered: bool = False
+    self_agent_verified: bool = False
+    payment_mode_default: str = "demo"  # demo | onchain
     language_preference: str = "english"  # english, french, arabic
     created_at: datetime = Field(default_factory=datetime.utcnow)
 
@@ -31,6 +35,10 @@ class UserPublic(BaseModel):
     role: str
     name: str
     wallet_balance: float
+    wallet_address: Optional[str] = None
+    onchain_registered: bool = False
+    self_agent_verified: bool = False
+    payment_mode_default: str = "demo"
     language_preference: str
 
 class HustlerProfile(BaseModel):
@@ -57,6 +65,17 @@ class Task(BaseModel):
     neighbourhood: str
     status: str = "open"  # open, matched, active, completed, disputed
     matched_hustler_id: Optional[str] = None
+    matched_hustler_wallet: Optional[str] = None
+    merchant_id: Optional[str] = None
+    merchant_name: Optional[str] = None
+    payment_mode: str = "demo"
+    escrow_id: Optional[int] = None
+    escrow_task_ref: Optional[str] = None
+    escrow_amount_wei: Optional[str] = None
+    escrow_fund_tx: Optional[str] = None
+    escrow_assign_tx: Optional[str] = None
+    escrow_release_tx: Optional[str] = None
+    escrow_status: Optional[str] = None  # pending, funded, assigned, released
     voice_payload_url: Optional[str] = None
     voice_transcript: Optional[str] = None
     created_at: datetime = Field(default_factory=datetime.utcnow)
@@ -68,6 +87,9 @@ class TaskCreate(BaseModel):
     budget: float
     neighbourhood: str
     voice_transcript: Optional[str] = None
+    payment_mode: str = "onchain"
+    merchant_id: Optional[str] = None
+    hustler_wallet: Optional[str] = None
 
 class Transaction(BaseModel):
     id: Optional[str] = Field(None, alias="_id")
