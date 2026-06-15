@@ -2,7 +2,7 @@ import { useQuery } from "@tanstack/react-query";
 import { useAccount, usePublicClient } from "wagmi";
 import { erc20Abi } from "./abis";
 import { useCeloConfig } from "@/components/CeloProvider";
-import { formatUsdc, formatNgnm, type CeloConfig } from "./config";
+import { formatUsdc, type CeloConfig } from "./config";
 
 export function useUsdcBalance(config?: CeloConfig | null) {
   const { config: ctxConfig } = useCeloConfig();
