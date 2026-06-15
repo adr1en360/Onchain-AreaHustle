@@ -370,11 +370,11 @@ function PassportPage() {
                 </div>
                 <div>
                   <div className="text-xs text-white/40 uppercase tracking-wider">30d Income</div>
-                  <div className="font-display font-bold text-[#10B981] text-base mt-0.5">{naira(proofCard.verified_income_30d)}</div>
+                  <div className="font-display font-bold text-[#10B981] text-base mt-0.5">{usdc(proofCard.verified_income_30d)}</div>
                 </div>
                 <div>
                   <div className="text-xs text-white/40 uppercase tracking-wider">90d Income</div>
-                  <div className="font-display font-bold text-white mt-0.5">{naira(proofCard.verified_income_90d)}</div>
+                  <div className="font-display font-bold text-white mt-0.5">{usdc(proofCard.verified_income_90d)}</div>
                 </div>
                 <div>
                   <div className="text-xs text-white/40 uppercase tracking-wider">Income Consistency</div>
