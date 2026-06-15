@@ -1,5 +1,5 @@
 # AreaHustle: Risk Assessment & Mitigation Strategy
-**YPIT Hackathon 2026 | Technical & Business Resilience Plan**
+**Onchain Hackathon Celo | Technical & Business Resilience Plan**
 
 As we build for the Nigerian informal economy under a voice-first model, we recognize four critical risks that could impact the scale and sustainability of AreaHustle. Below are our documented mitigations based on current industry standards and technical workarounds.
 

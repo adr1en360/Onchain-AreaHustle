@@ -1,0 +1,8 @@
+{
+  "chainId": 11142220,
+  "registry": "0x3924d078753C0e007697b8b487bbdD17Aa6fb580",
+  "escrow": "0x61D4fd78A858D0A74397fAe8F89b0bb7A2576e65",
+  "paymentToken": "0x01C5C0122039549AD1493B8220cABEdD739BC44E",
+  "platformFeeBps": 250,
+  "deployedAt": "2026-06-15T12:23:39.933Z"
+}

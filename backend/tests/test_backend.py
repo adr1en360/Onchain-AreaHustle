@@ -25,27 +25,25 @@ tokens = {"customer": "", "hustler": ""}
 
 
 async def register_and_login(role: str):
-    email = f"{role}@areahustle.com"
-    password = "password123"
+    address = "0x1111111111111111111111111111111111111111" if role == "customer" else "0x2222222222222222222222222222222222222222"
     async with httpx.AsyncClient() as client:
-        # Register
-        r = await client.post(f"{BASE}/api/v1/auth/register", json={
-            "email": email,
-            "password": password,
+        challenge_res = await client.post(f"{BASE}/api/v1/celo/wallet/challenge", json={
+            "address": address,
+            "action": "register"
+        })
+        assert challenge_res.status_code == 200, f"Challenge failed: {challenge_res.text}"
+        nonce = challenge_res.json()["nonce"]
+
+        auth_res = await client.post(f"{BASE}/api/v1/celo/wallet/auth", json={
+            "address": address,
+            "signature": "mock_signature_for_testing",
+            "nonce": nonce,
             "role": role,
-            "name": role.capitalize(),
+            "name": role.capitalize()
         })
-        if r.status_code == 201:
-            tokens[role] = r.json()["access_token"]
-            print(f"[{role}] Registered & logged in")
-            return
-        # If already exists, login
-        r2 = await client.post(f"{BASE}/api/v1/auth/login", data={
-            "username": email,
-            "password": password,
-        })
-        tokens[role] = r2.json()["access_token"]
-        print(f"[{role}] Logged in")
+        assert auth_res.status_code == 200, f"Auth failed: {auth_res.text}"
+        tokens[role] = auth_res.json()["access_token"]
+        print(f"[{role}] Registered & authenticated via wallet")
 
 
 async def test_task_lifecycle():
@@ -58,6 +56,7 @@ async def test_task_lifecycle():
             "description": "Deep clean my 2BR apartment",
             "budget": 15000,
             "neighbourhood": "Lekki Phase 1",
+            "payment_mode": "demo",
         }, headers=h)
         assert r.status_code == 201, f"Create failed: {r.text}"
         task_id = r.json()["id"]

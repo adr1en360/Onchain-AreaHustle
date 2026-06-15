@@ -5,9 +5,12 @@ import { useAuth } from "@/lib/auth-context";
 import { api } from "@/lib/api";
 import { toast } from "sonner";
 import { User, MapPin, Loader2, Save, Briefcase } from "lucide-react";
+import { CeloWalletBadge } from "@/components/CeloWalletBadge";
+import { WalletConnectButton } from "@/components/WalletConnectButton";
+import { useOnchainPayments } from "@/lib/celo/payments";
 
 export const Route = createFileRoute("/profile")({
-  head: () => ({ meta: [{ title: "My Profile · AreaHustle" }] }),
+  head: () => ({ meta: [{ title: "My Profile · Onchain AreaHustle" }] }),
   component: ProfilePage,
 });
 
@@ -30,6 +33,7 @@ const ALL_CATEGORIES = ["General", "Cleaning", "Repairs", "Errands", "Plumbing",
 
 function ProfilePage() {
   const { isLoggedIn, isLoading: authLoading, userRole, user } = useAuth();
+  const { enabled: celoEnabled, canPayOnchain } = useOnchainPayments();
   const nav = useNavigate();
   const queryClient = useQueryClient();
 
@@ -42,22 +46,12 @@ function ProfilePage() {
     if (!isLoggedIn) nav({ to: "/" });
   }, [isLoggedIn, authLoading, nav]);
 
-  // Fetch Profile (Fallback to native fetch if missing in api.ts)
   const { data: profile, isLoading: loadingProfile } = useQuery({
     queryKey: ["hustlerProfile"],
-    queryFn: async () => {
-      if ((api as any).getHustlerProfile) return (api as any).getHustlerProfile();
-      const token = localStorage.getItem("token");
-      const res = await fetch("https://areahustle.onrender.com/api/v1/users/hustler-profile", {
-        headers: { Authorization: `Bearer ${token}` },
-      });
-      if (!res.ok) throw new Error("Failed to fetch profile");
-      return res.json();
-    },
+    queryFn: () => api.getHustlerProfile(),
     enabled: isLoggedIn && userRole === "hustler",
   });
 
-  // Pre-fill fields when data loads
   useEffect(() => {
     if (profile) {
       setSelectedAreas(profile.service_areas || []);
@@ -65,63 +59,61 @@ function ProfilePage() {
     }
   }, [profile]);
 
-  // Update Profile (Fallback to native fetch if missing in api.ts)
   const updateMutation = useMutation({
-    mutationFn: async (data: any) => {
-      if ((api as any).updateHustlerProfile) return (api as any).updateHustlerProfile(data);
-      const token = localStorage.getItem("token");
-      const res = await fetch("https://areahustle.onrender.com/api/v1/users/hustler-profile", {
-        method: "PUT",
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: `Bearer ${token}`,
-        },
-        body: JSON.stringify(data),
-      });
-      if (!res.ok) {
-        const err = await res.json();
-        throw new Error(err?.detail?.[0]?.msg || "Failed to update profile");
-      }
-      return res.json();
-    },
+    mutationFn: (data: any) => api.updateHustlerProfile(data),
     onSuccess: () => {
       toast.success("Profile updated successfully!");
       queryClient.invalidateQueries({ queryKey: ["hustlerProfile"] });
       setEditMode(false);
     },
-    onError: (err: any) => {
-      toast.error(err.message || "Failed to update profile.");
-    },
+    onError: (err: any) => toast.error(err.message || "Failed to update profile."),
   });
 
   const toggleArea = (a: string) => {
-    if (selectedAreas.includes(a)) {
-      setSelectedAreas(selectedAreas.filter((x) => x !== a));
-    } else {
-      setSelectedAreas([...selectedAreas, a]);
-    }
+    setSelectedAreas((prev) => (prev.includes(a) ? prev.filter((x) => x !== a) : [...prev, a]));
   };
 
   const toggleCategory = (c: string) => {
-    if (selectedCategories.includes(c)) {
-      setSelectedCategories(selectedCategories.filter((x) => x !== c));
-    } else {
-      setSelectedCategories([...selectedCategories, c]);
-    }
+    setSelectedCategories((prev) => (prev.includes(c) ? prev.filter((x) => x !== c) : [...prev, c]));
   };
 
   const handleSave = () => {
-    updateMutation.mutate({
-      service_areas: selectedAreas,
-      categories: selectedCategories,
-    });
+    updateMutation.mutate({ service_areas: selectedAreas, categories: selectedCategories });
   };
 
-  if (userRole !== "hustler") {
+  const walletCard = (
+    <div className="rounded-3xl bg-card border shadow-soft p-6">
+      <div className="text-xs uppercase tracking-widest text-muted-foreground font-semibold mb-3">Payments</div>
+      {canPayOnchain ? (
+        <CeloWalletBadge />
+      ) : celoEnabled ? (
+        <div className="space-y-3">
+          <p className="text-sm text-muted-foreground">Connect your Celo wallet to receive USDC payouts automatically.</p>
+          <WalletConnectButton />
+        </div>
+      ) : (
+        <p className="text-sm text-muted-foreground">Demo wallet mode — link a Celo wallet when contracts are live.</p>
+      )}
+      {user?.wallet_address && (
+        <p className="text-xs text-muted-foreground mt-3 font-medium text-emerald-700">
+          Wallet linked{user.onchain_registered && " · On-chain profile verified"}
+        </p>
+      )}
+    </div>
+  );
+
+  if (userRole === "customer") {
     return (
-      <div className="mx-auto max-w-3xl px-4 py-16 text-center">
-        <h1 className="text-2xl font-bold mb-4">Customer Profile</h1>
-        <p className="text-muted-foreground">Customers manage their settings directly from the dashboard.</p>
+      <div className="mx-auto max-w-3xl px-4 py-12 animate-fade-up">
+        <div className="text-xs uppercase tracking-widest text-primary font-semibold mb-2">My Profile</div>
+        <h1 className="font-display text-4xl font-bold mb-8">{user?.name || "Customer"}</h1>
+        <div className="grid gap-6">
+          <div className="rounded-3xl bg-card border shadow-soft p-6">
+            <h2 className="font-semibold mb-1">{user?.email}</h2>
+            <p className="text-sm text-muted-foreground">Customer account</p>
+          </div>
+          {walletCard}
+        </div>
       </div>
     );
   }
@@ -176,6 +168,7 @@ function ProfilePage() {
               Verified Hustler
             </div>
           </div>
+          {walletCard}
         </div>
 
         <div className="md:col-span-2 space-y-6">

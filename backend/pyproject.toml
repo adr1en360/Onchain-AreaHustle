@@ -18,4 +18,6 @@ dependencies = [
     "uvicorn>=0.48.0",
     "email-validator>=2.3.0",
     "python-multipart>=0.0.32",
+    "eth-account>=0.13.7",
+    "eth-utils>=5.3.1",
 ]

@@ -15,7 +15,7 @@ const SAMPLE = {
 };
 
 export function VoiceTerminal() {
-  const { voiceOpen, setVoiceOpen, isLoggedIn, addJob } = useAuth();
+  const { voiceOpen, setVoiceOpen, isLoggedIn, addJob } = useAuth() as any;
   const navigate = useNavigate();
   const [phase, setPhase] = useState<Phase>("listening");
 

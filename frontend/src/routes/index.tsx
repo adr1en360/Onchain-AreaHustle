@@ -2,6 +2,8 @@ import { createFileRoute, Link } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
 import { useAuth } from "@/lib/auth-context";
 import { AuthModal } from "@/components/AuthModal";
+import { WalletConnectButton } from "@/components/WalletConnectButton";
+import { useOnchainPayments } from "@/lib/celo/payments";
 import { naira } from "@/lib/format";
 import heroHustler from "@/assets/hero-hustler.jpg";
 import estate from "@/assets/estate.jpg";
@@ -13,8 +15,8 @@ import { Mic, ArrowRight, Shield, Wallet, MapPin, Star, Sparkles, Zap, Lock, Tre
 export const Route = createFileRoute("/")({
   head: () => ({
     meta: [
-      { title: "AreaHustle - Your Area. Your Hustle. Your Trust." },
-      { name: "description", content: "Voice-enabled hyper-local gig marketplace and behavioral credit engine for informal workers." },
+      { title: "Onchain AreaHustle - Powered by Celo" },
+      { name: "description", content: "Voice-enabled hyper-local gig marketplace and onchain behavioral credit engine for informal workers on Celo." },
     ],
   }),
   component: Landing,
@@ -22,6 +24,7 @@ export const Route = createFileRoute("/")({
 
 function Landing() {
   const { isLoggedIn } = useAuth();
+  const { enabled: celoEnabled } = useOnchainPayments();
   const [authOpen, setAuthOpen] = useState(false);
   const [authRole, setAuthRole] = useState<"customer" | "hustler">("customer");
   const [authMode, setAuthMode] = useState<"login" | "register">("register");
@@ -45,16 +48,21 @@ function Landing() {
             <div className="lg:col-span-7 animate-fade-up">
               <div className="inline-flex items-center gap-2 rounded-full border bg-card px-3 py-1.5 text-xs text-muted-foreground mb-6 shadow-soft">
                 <span className="h-1.5 w-1.5 rounded-full bg-success animate-pulse" />
-                Now matching 2,400+ hustlers across Lagos
+                {celoEnabled ? "USDC escrow live on Celo Sepolia" : "Now matching 2,400+ hustlers across Lagos"}
               </div>
               <h1 className="font-display text-[44px] sm:text-6xl lg:text-7xl font-bold leading-[1.02] tracking-tight">
                 Your Area. <br className="hidden sm:block" />
-                Your Hustle. <span className="text-primary">Your Trust.</span>
+                Your Hustle. <span className="text-primary">On Celo.</span>
               </h1>
               <p className="mt-6 text-lg text-muted-foreground max-w-xl">
-                The first gig marketplace that turns your everyday tasks into a verified financial passport - voice-first, escrow-secured, locally
-                trusted.
+                The first gig marketplace that turns your everyday tasks into a verified financial passport — voice-first,
+                {celoEnabled ? " USDC escrow on Celo," : " escrow-secured,"} locally trusted.
               </p>
+              {celoEnabled && !isLoggedIn && (
+                <div className="mt-4">
+                  <WalletConnectButton />
+                </div>
+              )}
               <div className="mt-8 flex flex-wrap gap-3">
                 <Link
                   to={isLoggedIn ? "/post-task" : "/"}
@@ -107,7 +115,7 @@ function Landing() {
             {/* Bento mockup */}
             <div className="lg:col-span-5 animate-scale-in">
               <div className="grid grid-cols-2 gap-4">
-                <div className="col-span-2 rounded-3xl bg-card shadow-elevated p-6">
+                <div className="col-span-2 rounded-[32px] glass-card p-6 border border-white/40 hover-card-trigger">
                   <div className="flex items-center justify-between mb-4">
                     <div className="flex items-center gap-2">
                       <div className="h-9 w-9 rounded-2xl bg-voice/10 flex items-center justify-center">
@@ -132,7 +140,7 @@ function Landing() {
                       />
                     ))}
                   </div>
-                  <div className="rounded-2xl bg-muted p-4">
+                  <div className="rounded-2xl bg-muted/50 p-4 border border-black/5">
                     <div className="text-xs text-muted-foreground mb-1">Parsed by Gemini</div>
                     <div className="flex flex-wrap gap-2 text-xs">
                       <span className="rounded-full bg-card px-2.5 py-1 border">Generator Servicing</span>
@@ -142,11 +150,11 @@ function Landing() {
                   </div>
                 </div>
 
-                <div className="rounded-3xl bg-card shadow-soft p-5">
+                <div className="rounded-[28px] glass-card p-5 border border-white/40 hover-card-trigger">
                   <div className="text-xs text-muted-foreground mb-2">Trust Score</div>
                   <TrustDial value={820} />
                 </div>
-                <div className="rounded-3xl bg-primary text-primary-foreground p-5 shadow-soft flex flex-col justify-between">
+                <div className="rounded-[28px] bg-gradient-to-br from-emerald-600 to-emerald-800 text-white p-5 shadow-lg shadow-emerald-700/25 flex flex-col justify-between hover-card-trigger">
                   <div>
                     <div className="text-xs/relaxed opacity-70">Escrow Locked</div>
                     <div className="font-display text-3xl font-bold mt-1">{naira(8000)}</div>
@@ -164,13 +172,13 @@ function Landing() {
       {/* LOGOS / TRUST STRIP */}
       <section className="border-y bg-card/60">
         <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 py-6 flex flex-wrap items-center justify-center gap-x-6 sm:gap-x-10 gap-y-3 text-[10px] sm:text-xs uppercase tracking-widest text-muted-foreground text-center">
-          <span>Powered by Aethex Voice</span>
+          <span>Powered by Celo Onchain</span>
+          <span className="hidden sm:inline">•</span>
+          <span>Aethex Voice</span>
           <span className="hidden sm:inline">•</span>
           <span>Gemini Intent Parsing</span>
           <span className="hidden sm:inline">•</span>
-          <span>Paystack Escrow</span>
-          <span className="hidden sm:inline">•</span>
-          <span>Flutterwave Sweeps</span>
+          <span>Celo Escrow</span>
         </div>
       </section>
 
@@ -227,8 +235,8 @@ function Landing() {
             <div className="text-xs uppercase tracking-widest text-primary font-semibold mb-3">Built for the informal economy</div>
             <h2 className="font-display text-4xl sm:text-5xl font-bold tracking-tight mb-5">A passport that travels with the work.</h2>
             <p className="text-muted-foreground mb-6">
-              Bank statements ignore the hustle. AreaHustle counts every completed job, every five-star review, every on-time delivery - and turns it
-              into a credit footprint that lenders trust.
+              Bank statements ignore the hustle. Onchain AreaHustle counts every completed job, every five-star review, every on-time delivery - and turns it
+              into a credit footprint on Celo that lenders trust.
             </p>
             <ul className="space-y-3">
               {[
@@ -256,7 +264,7 @@ function Landing() {
           <div className="absolute inset-0 bg-gradient-to-t from-primary/90 via-primary/60 to-primary/20" />
           <div className="relative grid md:grid-cols-4 gap-6 p-8 sm:p-12 text-primary-foreground">
             <div className="md:col-span-2">
-              <h3 className="font-display text-4xl font-bold leading-tight">A new financial fabric, woven one job at a time.</h3>
+              <h3 className="font-display text-4xl font-bold leading-tight">A new onchain financial fabric, woven one job at a time.</h3>
             </div>
             {[
               { v: "₦1.2B+", l: "Escrowed since launch" },

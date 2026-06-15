@@ -10,17 +10,38 @@ type AuthContextType = {
   token: string | null;
   login: (data: any) => Promise<any>;
   register: (data: any) => Promise<any>;
+  loginWithWallet: (data: { address: string; signature: string; nonce: string; role?: string; name?: string }) => Promise<any>;
   logout: () => void;
   language: string;
   setLanguage: (lang: string) => void;
   areas: string[];
   setAreas: (areas: string[]) => void;
+  refreshUser: () => Promise<any>;
+  loginWithToken: (accessToken: string) => Promise<any>;
   updateDemoBalance: (role: string, amount: number) => void;
   addDemoTransaction: (txn: any) => void;
-  refreshUser?: () => Promise<void>;
+  usesOnchainWallet: boolean;
 };
 
+
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
+
+function enrichUser(u: any) {
+  if (!u) return u;
+  if (u.wallet_address) return { ...u, usesOnchainWallet: true };
+
+  const isCustomer = u.role === "customer";
+  if (isCustomer && !localStorage.getItem("demo_customer_balance")) {
+    localStorage.setItem("demo_customer_balance", "1000000");
+  }
+  if (!isCustomer && !localStorage.getItem("demo_hustler_balance")) {
+    localStorage.setItem("demo_hustler_balance", "0");
+  }
+
+  const balance = parseInt(localStorage.getItem(isCustomer ? "demo_customer_balance" : "demo_hustler_balance") || "0");
+  const trustScore = parseInt(localStorage.getItem("demo_hustler_trust") || "820");
+  return { ...u, wallet_balance: balance, trust_score: trustScore, usesOnchainWallet: false };
+}
 
 export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [token, setToken] = useState<string | null>(localStorage.getItem("token"));
@@ -29,58 +50,6 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [language, setLanguage] = useState("English");
   const [areas, setAreas] = useState<string[]>([]);
 
-  const syncDemoState = (u: any) => {
-    return u;
-  };
-
-  const refreshUser = async () => {
-    if (token) {
-      try {
-        const u = await api.getMe();
-        setUser(u);
-      } catch (e) {}
-    }
-  };
-
-  useEffect(() => {
-    if (token) {
-      setIsLoading(true);
-      api
-        .getMe()
-        .then((u) => {
-          setUser(syncDemoState(u));
-          setIsLoading(false);
-        })
-        .catch(() => {
-          logout();
-          setIsLoading(false);
-        });
-    } else {
-      setIsLoading(false);
-    }
-  }, [token]);
-
-  useEffect(() => {
-    const handleStorage = () => {
-      setUser((prev: any) => syncDemoState(prev));
-    };
-    window.addEventListener("storage", handleStorage);
-    return () => window.removeEventListener("storage", handleStorage);
-  }, []);
-
-  const login = async (data: any) => {
-    const res = await api.login(data);
-    localStorage.setItem("token", res.access_token);
-    setToken(res.access_token);
-    const u = await api.getMe();
-    setUser(syncDemoState(u));
-    return syncDemoState(u);
-  };
-
-  const register = async (data: any) => {
-    await api.register(data);
-    return await login({ username: data.email, password: data.password });
-  };
 
   const logout = () => {
     localStorage.removeItem("token");
@@ -89,17 +58,67 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     toast.info("Logged out successfully");
   };
 
-  const updateDemoBalance = async (role: string, amount: number) => {
-    try {
-      await api.updateWallet(amount);
-      await refreshUser();
-    } catch (err: any) {
-      toast.error("Failed to update wallet balance: " + err.message);
+
+  const refreshUser = async () => {
+    const u = await api.getMe();
+    setUser(enrichUser(u));
+    return enrichUser(u);
+  };
+
+  useEffect(() => {
+    if (token) {
+      setIsLoading(true);
+      refreshUser()
+        .catch(() => logout())
+        .finally(() => setIsLoading(false));
+    } else {
+      setIsLoading(false);
     }
+  }, [token]);
+
+  const loginWithToken = async (accessToken: string) => {
+    localStorage.setItem("token", accessToken);
+    setToken(accessToken);
+    return refreshUser();
+  };
+
+  const login = async (data: any) => {
+    const res = await api.login(data);
+    localStorage.setItem("token", res.access_token);
+    setToken(res.access_token);
+    return refreshUser();
+  };
+
+  const register = async (data: any) => {
+    await api.register(data);
+    return await login({ username: data.email, password: data.password });
+  };
+
+  const loginWithWallet = async (data: { address: string; signature: string; nonce: string; role?: string; name?: string }) => {
+    const res = await api.walletAuth(data);
+    localStorage.setItem("token", res.access_token);
+    setToken(res.access_token);
+    return refreshUser();
+  };
+
+  const updateDemoBalance = (role: string, amount: number) => {
+    if (user?.wallet_address) return;
+    const key = role === "customer" ? "demo_customer_balance" : "demo_hustler_balance";
+    const current = parseInt(localStorage.getItem(key) || (role === "customer" ? "1000000" : "0"));
+    const newBalance = current + Number(amount);
+    localStorage.setItem(key, newBalance.toString());
+    setUser((prev: any) => (prev && prev.role === role ? { ...prev, wallet_balance: newBalance } : prev));
   };
 
   const addDemoTransaction = (txn: any) => {
-    refreshUser();
+    if (user?.wallet_address) return;
+    const txns = JSON.parse(localStorage.getItem("demo_transactions") || "[]");
+    txns.unshift(txn);
+    localStorage.setItem("demo_transactions", JSON.stringify(txns));
+    const trust = parseInt(localStorage.getItem("demo_hustler_trust") || "820");
+    const newTrust = Math.min(1000, trust + 15);
+    localStorage.setItem("demo_hustler_trust", newTrust.toString());
+    setUser((prev: any) => (prev?.role === "hustler" ? { ...prev, trust_score: newTrust } : prev));
   };
 
   return (
@@ -112,14 +131,18 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         token,
         login,
         register,
+        loginWithWallet,
         logout,
         language,
         setLanguage,
         areas,
         setAreas,
+        refreshUser,
+        loginWithToken,
         updateDemoBalance,
         addDemoTransaction,
-        refreshUser,
+        usesOnchainWallet: Boolean(user?.wallet_address),
+
       }}
     >
       {children}

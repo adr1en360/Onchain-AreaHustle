@@ -5,8 +5,12 @@ import { useAuth } from "@/lib/auth-context";
 import { api } from "@/lib/api";
 import { naira } from "@/lib/format";
 import { AnimatedNumber } from "@/components/AnimatedNumber";
-import { Plus, CheckCircle, Clock, MapPin, Phone, Edit, X } from "lucide-react";
+import { Plus, CheckCircle, Clock, MapPin, Phone, Edit, X, Link2 } from "lucide-react";
 import { toast } from "sonner";
+import { useOnchainPayments } from "@/lib/celo/payments";
+import { CeloWalletBadge } from "@/components/CeloWalletBadge";
+import { EscrowBadge } from "@/components/EscrowBadge";
+import { useCeloContracts } from "@/lib/celo/hooks";
 
 export const Route = createFileRoute("/customer-dashboard")({
   component: CustomerDashboard,
@@ -14,6 +18,8 @@ export const Route = createFileRoute("/customer-dashboard")({
 
 function CustomerDashboard() {
   const { isLoggedIn, isLoading: authLoading, userRole, user, updateDemoBalance, addDemoTransaction } = useAuth();
+  const { canPayOnchain, config } = useOnchainPayments();
+  const { assignHustler, releaseEscrow } = useCeloContracts(config);
   const nav = useNavigate();
   const queryClient = useQueryClient();
   const [topUpOpen, setTopUpOpen] = useState(false);
@@ -47,12 +53,27 @@ function CustomerDashboard() {
   }, [isLoggedIn, refreshUser]);
 
   const confirmMutation = useMutation({
-    mutationFn: (id: string) => api.completeTask(id),
+    mutationFn: async (id: string) => {
+      const job = myJobs.find((j: any) => (j.id || j._id) == id);
+      if (job?.payment_mode === "onchain") {
+        if (job.escrow_status === "funded" && job.matched_hustler_wallet && job.escrow_id) {
+          const assignTx = await assignHustler(job.escrow_id, job.matched_hustler_wallet);
+          await api.confirmEscrowAssign(id, assignTx);
+        }
+        if (job.escrow_status === "assigned" && job.escrow_id) {
+          const releaseTx = await releaseEscrow(job.escrow_id);
+          await api.confirmEscrowRelease(id, releaseTx);
+          return { onchain: true };
+        }
+        throw new Error("On-chain escrow is not ready for release");
+      }
+      return api.completeTask(id);
+    },
     onSuccess: (data, variables) => {
-      toast.success("Payment released! Escrow funds transferred to Hustler.");
+      toast.success(data?.onchain ? "USDC payment released on Celo!" : "Payment released! Escrow funds transferred to Hustler.");
 
       const job = myJobs.find((j: any) => (j.id || j._id) == variables);
-      if (job) {
+      if (job && job.payment_mode !== "onchain") {
         const amount = Number(job.budget) || 0;
       }
 
@@ -61,6 +82,19 @@ function CustomerDashboard() {
     onError: (err: any) => {
       toast.error(err.message || "Failed to confirm job.");
     },
+  });
+
+  const assignEscrowMutation = useMutation({
+    mutationFn: async (job: any) => {
+      const id = job.id || job._id;
+      const tx = await assignHustler(job.escrow_id, job.matched_hustler_wallet);
+      await api.confirmEscrowAssign(id, tx);
+    },
+    onSuccess: () => {
+      toast.success("Hustler assigned on-chain — job is now active");
+      queryClient.invalidateQueries({ queryKey: ["customerJobs"] });
+    },
+    onError: (err: any) => toast.error(err.message || "Failed to assign hustler on-chain"),
   });
 
   const updateMutation = useMutation({
@@ -138,30 +172,36 @@ function CustomerDashboard() {
       </div>
 
       <div className="grid md:grid-cols-3 gap-6 mb-10">
-        <div className="rounded-3xl bg-primary text-primary-foreground p-7 shadow-soft flex flex-col justify-between">
-          <div>
-            <div className="text-xs opacity-70 uppercase tracking-widest">Wallet Balance</div>
-            <div className="font-display text-4xl font-bold mt-2 tabular-nums">
-              ₦<AnimatedNumber value={walletBalance} />
+        {canPayOnchain ? (
+          <div className="md:col-span-1">
+            <CeloWalletBadge />
+          </div>
+        ) : (
+          <div className="rounded-3xl bg-primary text-primary-foreground p-7 shadow-soft flex flex-col justify-between">
+            <div>
+              <div className="text-xs opacity-70 uppercase tracking-widest">Demo Wallet</div>
+              <div className="font-display text-4xl font-bold mt-2 tabular-nums">
+                ₦<AnimatedNumber value={walletBalance} />
+              </div>
+            </div>
+            <div className="flex gap-3 mt-6">
+              <button
+                onClick={() => setTopUpOpen(true)}
+                className="flex-1 rounded-2xl bg-primary-foreground text-primary py-3 text-sm font-semibold hover:opacity-90 transition"
+              >
+                Top Up
+              </button>
+              <button
+                onClick={() => setWithdrawOpen(true)}
+                className="flex-1 rounded-2xl border border-primary-foreground/30 text-primary-foreground py-3 text-sm font-semibold hover:bg-primary-foreground/10 transition"
+              >
+                Withdraw
+              </button>
             </div>
           </div>
-          <div className="flex gap-3 mt-6">
-            <button
-              onClick={() => setTopUpOpen(true)}
-              className="flex-1 rounded-2xl bg-primary-foreground text-primary py-3 text-sm font-semibold hover:opacity-90 transition"
-            >
-              Top Up
-            </button>
-            <button
-              onClick={() => setWithdrawOpen(true)}
-              className="flex-1 rounded-2xl border border-primary-foreground/30 text-primary-foreground py-3 text-sm font-semibold hover:bg-primary-foreground/10 transition"
-            >
-              Withdraw
-            </button>
-          </div>
-        </div>
+        )}
 
-        <div className="md:col-span-2 rounded-3xl bg-card border shadow-soft p-7 flex flex-col justify-center text-center items-center">
+        <div className={`${canPayOnchain ? "md:col-span-2" : "md:col-span-2"} rounded-3xl bg-card border shadow-soft p-7 flex flex-col justify-center text-center items-center`}>
           <h3 className="font-display text-xl font-bold mb-2">Need something done fast?</h3>
           <p className="text-muted-foreground text-sm max-w-sm mb-6">Use our voice-enabled task terminal to post a job in seconds.</p>
           <button
@@ -213,6 +253,7 @@ function CustomerDashboard() {
                             : status}
                     </span>
                     <span className="text-xs text-muted-foreground">{job.category}</span>
+                    <EscrowBadge paymentMode={job.payment_mode} escrowStatus={job.escrow_status} compact />
                   </div>
                   <h3 className="font-display text-lg font-bold">{job.title}</h3>
                   {job.description && <p className="text-sm text-muted-foreground mt-1 line-clamp-2">{job.description}</p>}
@@ -259,30 +300,54 @@ function CustomerDashboard() {
                     </div>
                   )}
                   {(status === "matched" || status === "accepted" || status === "in_progress" || status === "active") && (
-                    <div className="flex items-center gap-3">
-                      <div className="text-sm">
-                        Assigned: <span className="font-semibold">{job.assignedHustler || "A Hustler"}</span>
-                        {(status === "in_progress" || status === "active") && (
-                          <span className="ml-1 text-primary text-[10px] font-bold uppercase tracking-widest">(Working)</span>
-                        )}
+                    <div className="flex flex-col items-end gap-2">
+                      <div className="flex items-center gap-3">
+                        <div className="text-sm">
+                          Assigned: <span className="font-semibold">{job.assignedHustler || "A Hustler"}</span>
+                          {(status === "in_progress" || status === "active") && (
+                            <span className="ml-1 text-primary text-[10px] font-bold uppercase tracking-widest">(Working)</span>
+                          )}
+                        </div>
+                        <button 
+                          onClick={() => setShowPhoneModal((job as any).hustlerPhone || "+234 809 876 5432")}
+                          className="h-10 w-10 shrink-0 rounded-full bg-success/10 text-success flex items-center justify-center hover:bg-success/20 transition"
+                        >
+                          <Phone className="h-4 w-4" />
+                        </button>
                       </div>
-                      <button 
-                        onClick={() => setShowPhoneModal((job as any).hustlerPhone || "+234 809 876 5432")}
-                        className="h-10 w-10 shrink-0 rounded-full bg-success/10 text-success flex items-center justify-center hover:bg-success/20 transition"
-                      >
-                        <Phone className="h-4 w-4" />
-                      </button>
+                      {job.payment_mode === "onchain" && job.escrow_status === "funded" && job.matched_hustler_wallet && (
+                        <button
+                          onClick={() => assignEscrowMutation.mutate(job)}
+                          disabled={assignEscrowMutation.isPending}
+                          className="rounded-full border px-4 py-2 text-xs font-semibold hover:bg-muted flex items-center gap-1.5"
+                        >
+                          <Link2 className="h-3.5 w-3.5" /> Assign hustler on-chain
+                        </button>
+                      )}
+                      {job.payment_mode === "onchain" && job.escrow_status === "assigned" && (
+                        <button
+                          onClick={() => handleConfirm(job.id || job._id)}
+                          disabled={confirmMutation.isPending}
+                          className="rounded-full bg-[#183620] text-white px-4 py-2 text-xs font-semibold hover:opacity-90 flex items-center gap-1.5"
+                        >
+                          <CheckCircle className="h-3.5 w-3.5" /> Release USDC on Celo
+                        </button>
+                      )}
+
                     </div>
                   )}
                   {status === "awaiting_confirmation" && (
                     <div className="flex flex-col items-end gap-2 w-full sm:w-auto">
-                      <span className="text-xs text-orange-600 font-semibold italic px-1">Hustler marked as done. Please review.</span>
+                      <span className="text-xs text-orange-600 font-semibold italic px-1">
+                        Hustler marked as done. Please review.
+                        {job.payment_mode === "onchain" && " Release USDC from your wallet."}
+                      </span>
                       <button
                         onClick={() => handleConfirm(job.id || job._id)}
                         disabled={confirmMutation.isPending}
                         className="w-full sm:w-auto justify-center rounded-full bg-[#183620] text-white px-5 py-2.5 text-sm font-semibold hover:opacity-90 transition flex items-center gap-2 shadow-soft animate-pulse"
                       >
-                        <CheckCircle className="h-4 w-4" /> Release Payment
+                        <CheckCircle className="h-4 w-4" /> {job.payment_mode === "onchain" ? "Release USDC on Celo" : "Release Payment"}
                       </button>
                     </div>
                   )}

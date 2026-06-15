@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import { useNavigate } from "@tanstack/react-router";
-import { useAuth, type PostedJob } from "@/lib/auth-context";
+import { useAuth } from "@/lib/auth-context";
 import { naira } from "@/lib/format";
 import {
   X,
@@ -23,11 +23,11 @@ export function JobSlideOver({
   open,
   onClose,
 }: {
-  job: PostedJob | null;
+  job: any | null;
   open: boolean;
   onClose: () => void;
 }) {
-  const { triggerPayout } = useAuth();
+  const { triggerPayout } = useAuth() as any;
   const navigate = useNavigate();
   const [phase, setPhase] = useState<Phase>("review");
 
@@ -97,7 +97,7 @@ export function JobSlideOver({
           <div className="mt-6 rounded-2xl border bg-muted/30 p-5">
             <div className="flex items-center gap-3">
               <div className="h-11 w-11 rounded-full bg-primary text-primary-foreground flex items-center justify-center font-semibold">
-                {job.customer.split(" ").map((s) => s[0]).slice(0, 2).join("")}
+                {job.customer.split(" ").map((s: string) => s[0]).slice(0, 2).join("")}
               </div>
               <div className="flex-1">
                 <div className="font-semibold">{job.customer}</div>

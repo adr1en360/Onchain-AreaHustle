@@ -6,16 +6,23 @@ import { api } from "@/lib/api";
 import { naira } from "@/lib/format";
 import { Mic, Lock, MapPin, Tag, Wallet, Sparkles, Check, Keyboard } from "lucide-react";
 import { toast } from "sonner";
+import { useCeloContracts } from "@/lib/celo/hooks";
+import { useOnchainPayments } from "@/lib/celo/payments";
+import { CeloWalletBadge } from "@/components/CeloWalletBadge";
+import { WalletConnectButton } from "@/components/WalletConnectButton";
 
 export const Route = createFileRoute("/post-task")({
-  head: () => ({ meta: [{ title: "Post a Task · AreaHustle" }] }),
+  head: () => ({ meta: [{ title: "Post a Task · Onchain AreaHustle" }] }),
   component: PostTask,
 });
 
 type Phase = "idle" | "recording" | "processing" | "result" | "locked";
 
 function PostTask() {
-  const { isLoggedIn } = useAuth();
+  const { isLoggedIn, user } = useAuth();
+  const { canPayOnchain, enabled: celoEnabled, config } = useOnchainPayments();
+  const { fundEscrow } = useCeloContracts(config);
+  const paymentMode = canPayOnchain ? "onchain" : "demo";
   const nav = useNavigate();
   const queryClient = useQueryClient();
   const [phase, setPhase] = useState<Phase>("idle");
@@ -35,9 +42,17 @@ function PostTask() {
   }, [isLoggedIn, nav]);
 
   const createMutation = useMutation({
-    mutationFn: (data: any) => api.createTask(data),
+    mutationFn: async (data: any) => {
+      const created = await api.createTask({ ...data, payment_mode: paymentMode });
+      if (paymentMode === "onchain" && created.escrow?.task_ref) {
+        toast.info("Approve USDC and lock escrow in your wallet…");
+        const txHash = await fundEscrow(created.escrow.task_ref as `0x${string}`, data.budget);
+        await api.confirmEscrowFund(created.id, txHash);
+      }
+      return created;
+    },
     onSuccess: () => {
-      toast.success("Job Posted!");
+      toast.success(paymentMode === "onchain" ? "Job posted with on-chain escrow!" : "Job Posted!");
       queryClient.invalidateQueries({ queryKey: ["customerJobs"] });
       nav({ to: "/customer-dashboard" });
     },
@@ -120,7 +135,22 @@ function PostTask() {
       <div className="text-center mb-10">
         <div className="text-xs uppercase tracking-widest text-voice font-semibold mb-3">Task Terminal</div>
         <h1 className="font-display text-4xl sm:text-5xl font-bold tracking-tight">Speak your task.</h1>
-        <p className="text-muted-foreground mt-3 max-w-md mx-auto">Aethex listens. Gemini structures. Lock escrow when it looks right.</p>
+        <p className="text-muted-foreground mt-3 max-w-md mx-auto">
+          {canPayOnchain
+            ? "Escrow locks in USDC on Celo when you publish. Hustlers get paid automatically on release."
+            : "Aethex listens. Gemini structures. Lock escrow when it looks right."}
+        </p>
+        {celoEnabled && !canPayOnchain && (
+          <div className="mt-6 flex flex-col items-center gap-3">
+            <p className="text-sm text-amber-700">Connect and link your Celo wallet to pay with USDC escrow.</p>
+            <WalletConnectButton />
+          </div>
+        )}
+        {canPayOnchain && (
+          <div className="mt-6 max-w-sm mx-auto">
+            <CeloWalletBadge />
+          </div>
+        )}
       </div>
 
       <div className="rounded-3xl bg-card border shadow-elevated p-8 sm:p-12">
@@ -285,7 +315,7 @@ function PostTask() {
                     </>
                   ) : (
                     <>
-                      <Lock className="h-4 w-4" /> Lock Escrow to Confirm
+                      <Lock className="h-4 w-4" /> {canPayOnchain ? "Lock USDC escrow on Celo" : "Lock Escrow to Confirm"}
                     </>
                   )}
                 </button>

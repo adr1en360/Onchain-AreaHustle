@@ -1,6 +1,8 @@
 **/__pycache__ /
 .venv/
 .env
+frontend/.env
+backend/.env
 *.pyc
 .uv
 skills/
@@ -10,3 +12,5 @@ docs/MOTION_STRATEGY.md
 docs/PITCH_STRATEGY.md
 .gemini/settings.json
 backend/agents/AETHEX_DOCS.md
+node_modules
+

@@ -7,7 +7,7 @@ import { toast } from "sonner";
 import { Check, Globe, MapPin, Loader2 } from "lucide-react";
 
 export const Route = createFileRoute("/onboarding")({
-  head: () => ({ meta: [{ title: "Get Started · AreaHustle" }] }),
+  head: () => ({ meta: [{ title: "Get Started · Onchain AreaHustle" }] }),
   component: Onboarding,
 });
 
@@ -133,7 +133,7 @@ function Onboarding() {
                 className="flex-[2] flex justify-center items-center gap-2 rounded-2xl bg-primary py-3.5 text-sm font-semibold text-primary-foreground disabled:opacity-40"
               >
                 {createProfileMutation.isPending && <Loader2 className="h-4 w-4 animate-spin" />}
-                Enter AreaHustle
+                Enter Onchain AreaHustle
               </button>
             </div>
           </>

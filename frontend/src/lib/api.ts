@@ -1,7 +1,9 @@
 const BASE_URL =
-  window.location.hostname === "localhost" || window.location.hostname === "127.0.0.1"
+  import.meta.env.VITE_API_URL ||
+  (window.location.hostname === "localhost" || window.location.hostname === "127.0.0.1"
     ? "http://localhost:8000/api/v1"
-    : "https://areahustle.onrender.com/api/v1";
+    : "https://areahustle.onrender.com/api/v1");
+
 
 async function fetchApi(endpoint: string, options: RequestInit = {}) {
   const token = localStorage.getItem("token");
@@ -63,6 +65,7 @@ export const api = {
   // Users / Hustler Profile
   getHustlerProfile: () => fetchApi("/users/hustler-profile"),
   createHustlerProfile: (data: any) => fetchApi("/users/hustler-profile", { method: "POST", body: JSON.stringify(data) }),
+  updateHustlerProfile: (data: any) => fetchApi("/users/hustler-profile", { method: "PUT", body: JSON.stringify(data) }),
 
   // Tasks
   createTask: (data: any) => fetchApi("/tasks/", { method: "POST", body: JSON.stringify(data) }),
@@ -89,4 +92,27 @@ export const api = {
   getProofCard: () => fetchApi("/passport/proof-card"),
   getTransactions: () => fetchApi("/transactions/"),
   updateWallet: (amount: number) => fetchApi("/users/wallet/update", { method: "POST", body: JSON.stringify({ amount }) }),
+
+  // Celo
+  getCeloConfig: () => fetchApi("/celo/config"),
+  getWalletChallenge: (address: string, action: "link" | "register" | "login" | "auth" = "link") =>
+    fetchApi("/celo/wallet/challenge", {
+      method: "POST",
+      body: JSON.stringify({ address, action }),
+    }),
+  walletAuth: (data: { address: string; signature: string; nonce: string; role?: string; name?: string }) =>
+    fetchApi("/celo/wallet/auth", { method: "POST", body: JSON.stringify(data) }),
+  walletRegister: (data: { address: string; signature: string; nonce: string; role: string; name?: string }) =>
+    fetchApi("/celo/wallet/register", { method: "POST", body: JSON.stringify(data) }),
+  linkWallet: (data: { address: string; signature: string; nonce: string }) =>
+    fetchApi("/celo/wallet/link", { method: "POST", body: JSON.stringify(data) }),
+  confirmOnchainRegistration: (tx_hash: string) =>
+    fetchApi("/celo/wallet/onchain-register/confirm", { method: "POST", body: JSON.stringify({ tx_hash }) }),
+  confirmEscrowFund: (taskId: string, tx_hash: string) =>
+    fetchApi(`/celo/escrow/${taskId}/confirm-fund`, { method: "POST", body: JSON.stringify({ tx_hash }) }),
+  confirmEscrowAssign: (task_id: string, tx_hash: string) =>
+    fetchApi("/celo/escrow/confirm-assign", { method: "POST", body: JSON.stringify({ task_id, tx_hash }) }),
+  confirmEscrowRelease: (task_id: string, tx_hash: string) =>
+    fetchApi("/celo/escrow/confirm-release", { method: "POST", body: JSON.stringify({ task_id, tx_hash }) }),
+
 };

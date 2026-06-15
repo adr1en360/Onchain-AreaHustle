@@ -4,6 +4,7 @@ import { useEffect, type ReactNode } from "react";
 
 import appCss from "../styles.css?url";
 import { AuthProvider } from "@/lib/auth-context";
+import { CeloProvider } from "@/components/CeloProvider";
 import { Navbar } from "@/components/Navbar";
 import { Footer } from "@/components/Footer";
 import { VoiceTerminal } from "@/components/VoiceTerminal";
@@ -63,30 +64,30 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
     meta: [
       { charSet: "utf-8" },
       { name: "viewport", content: "width=device-width, initial-scale=1" },
-      { title: "AreaHustle - Your Financial Passport Assistant" },
-      { name: "title", content: "AreaHustle - Your Financial Passport Assistant" },
+      { title: "Onchain AreaHustle - Your Celo Financial Passport Assistant" },
+      { name: "title", content: "Onchain AreaHustle - Your Celo Financial Passport Assistant" },
       {
         name: "description",
-        content: "AreaHustle provides a smart Financial Passport Assistant to help you manage your hustles and finances effectively.",
+        content: "Onchain AreaHustle provides a smart Financial Passport Assistant on Celo to help you manage your hustles and finances effectively.",
       },
-      { name: "keywords", content: "finance, hustle, financial passport, assistant, areahustle, wealth management" },
+      { name: "keywords", content: "finance, hustle, financial passport, assistant, areahustle, celo, onchain, wealth management" },
       { name: "author", content: "AreaHustle Team" },
       { name: "robots", content: "index, follow" },
       { name: "theme-color", content: "#ffffff" },
       { property: "og:type", content: "website" },
       { property: "og:url", content: "https://areahustle.com/" },
-      { property: "og:title", content: "AreaHustle - Your Financial Passport Assistant" },
+      { property: "og:title", content: "Onchain AreaHustle - Your Celo Financial Passport Assistant" },
       {
         property: "og:description",
-        content: "AreaHustle provides a smart Financial Passport Assistant to help you manage your hustles and finances effectively.",
+        content: "Onchain AreaHustle provides a smart Financial Passport Assistant on Celo to help you manage your hustles and finances effectively.",
       },
       { property: "og:image", content: "https://areahustle.com/banner-image.png" },
       { name: "twitter:card", content: "summary_large_image" },
       { name: "twitter:url", content: "https://areahustle.com/" },
-      { name: "twitter:title", content: "AreaHustle - Your Financial Passport Assistant" },
+      { name: "twitter:title", content: "Onchain AreaHustle - Your Celo Financial Passport Assistant" },
       {
         name: "twitter:description",
-        content: "AreaHustle provides a smart Financial Passport Assistant to help you manage your hustles and finances effectively.",
+        content: "Onchain AreaHustle provides a smart Financial Passport Assistant on Celo to help you manage your hustles and finances effectively.",
       },
       { name: "twitter:image", content: "https://areahustle.com/banner-image.png" },
     ],
@@ -125,23 +126,26 @@ function RootComponent() {
 
   return (
     <QueryClientProvider client={queryClient}>
-      <AuthProvider>
-        {isPitch ? (
-          /* Pitch deck: full-screen immersive, no app chrome */
-          <Outlet />
-        ) : (
-          <>
-            <PageLoader />
-            <Navbar />
-            <main className="min-h-[calc(100vh-4rem)]">
-              <Outlet />
-            </main>
-            <Footer />
-            {/* <VoiceTerminal /> */}
-            <Toaster position="top-right" richColors />
-          </>
-        )}
-      </AuthProvider>
+      <CeloProvider>
+        <AuthProvider>
+          {isPitch ? (
+            /* Pitch deck: full-screen immersive, no app chrome */
+            <Outlet />
+          ) : (
+            <>
+              <PageLoader />
+              <Navbar />
+              <main className="min-h-[calc(100vh-4rem)]">
+                <Outlet />
+              </main>
+              <Footer />
+              {/* <VoiceTerminal /> */}
+              <Toaster position="top-right" richColors />
+            </>
+          )}
+        </AuthProvider>
+      </CeloProvider>
+
     </QueryClientProvider>
   );
 }

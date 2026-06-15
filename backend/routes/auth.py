@@ -71,55 +71,24 @@ class Token(BaseModel):
     token_type: str
 
 
-@router.post("/register", response_model=Token)
-async def register(user: UserCreate, db: AsyncIOMotorDatabase = Depends(get_database)):
-    existing = await db.users.find_one({"email": user.email})
-    if existing:
-        raise HTTPException(status_code=400, detail="Email already registered")
+# Removed traditional register and login endpoints to enforce wallet-only authentication.
 
-    hashed = get_password_hash(user.password)
-    new_user = User(
-        email=user.email,
-        hashed_password=hashed,
-        role=user.role,
-        name=user.name,
-        phone_number=user.phone_number,
-        language_preference=user.language_preference,
-    )
-    result = await db.users.insert_one(new_user.dict(by_alias=True, exclude={"id"}))
-    user_id = str(result.inserted_id)
-
-    access_token = create_access_token(
-        {"sub": user_id, "role": user.role},
-        expires_delta=timedelta(minutes=ACCESS_TOKEN_EXPIRE_MINUTES),
-    )
-    return {"access_token": access_token, "token_type": "bearer"}
-
-
-@router.post("/login", response_model=Token)
-async def login(
-    form_data: OAuth2PasswordRequestForm = Depends(),
-    db: AsyncIOMotorDatabase = Depends(get_database),
-):
-    user = await db.users.find_one({"email": form_data.username})
-    if not user or not verify_password(form_data.password, user.get("hashed_password", "")):
-        raise HTTPException(status_code=400, detail="Incorrect email or password")
-
-    access_token = create_access_token(
-        {"sub": str(user["_id"]), "role": user.get("role", "customer")},
-        expires_delta=timedelta(minutes=ACCESS_TOKEN_EXPIRE_MINUTES),
-    )
-    return {"access_token": access_token, "token_type": "bearer"}
 
 
 @router.get("/me", response_model=UserPublic)
 async def read_users_me(current_user: dict = Depends(get_current_user)):
+    email = current_user.get("email")
+    if email and email.endswith(".local"):
+        email = email.replace(".local", ".com")
     return UserPublic(
         id=str(current_user.get("_id")),
-        email=current_user.get("email"),
+        email=email,
         role=current_user.get("role"),
         name=current_user.get("name", ""),
         phone_number=current_user.get("phone_number", ""),
         wallet_balance=current_user.get("wallet_balance", 0.0),
+        wallet_address=current_user.get("wallet_address"),
+        onchain_registered=current_user.get("onchain_registered", False),
+        payment_mode_default=current_user.get("payment_mode_default", "demo"),
         language_preference=current_user.get("language_preference", "english"),
     )

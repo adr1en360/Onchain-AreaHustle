@@ -1,5 +1,5 @@
 # AreaHustle: Turning Everyday Hustle into Bankable Proof
-**A YPIT Hackathon 2026 Submission (Finance Track + Aethex Voice AI Track)**
+**An Onchain Hackathon Celo Submission (Finance Track + Aethex Voice AI Track)**
 **Tagline:** *"Your Area. Your Hustle. Your Proof."*
 
 ---
@@ -44,7 +44,16 @@ AreaHustle does not compute a credit score; instead, it outputs a bureau-ready *
 
 ---
 
-## 4. Why AreaHustle Wins
+## 4. Celo Onchain Security & Settlement
+AreaHustle leverages Celo to ensure payment trust and identity security in the informal economy:
+* **NGNm Stablecoin Escrow:** Tasks are funded using NGNm (Naira stablecoin) locked in the `TaskEscrow` smart contract. Payouts are held in escrow and released trustlessly once a job is complete.
+* **Onchain Identity Registry:** Hustlers link their wallets and work histories onchain via `AreaHustleRegistry`, securing their identity on a decentralized, public ledger.
+* **Low-Cost Micropayments:** Celo's sub-cent gas fees and mobile-first ecosystem are ideal for entry-level devices and micro-gigs, ensuring earnings go directly to the worker.
+
+---
+
+## 5. Why AreaHustle Wins
 1. **Voice-First Design:** Meets low-literacy and WhatsApp-native workers on their own terms (natural voice conversations).
-2. **Alternative Data Asset:** Solves the core credit underwriting problem in Nigeria's informal economy by generating structured data instead of trying to absorb capital risk.
-3. **Pioneering AI Matching:** Employs active outbound voice matchmaking to optimize job completion rates and locks tasks on the hustler's behalf immediately upon acceptance.
+2. **Onchain Settlement:** Eliminates payment default risk using Celo escrow and local stablecoins, giving workers guaranteed payment security.
+3. **Alternative Data Asset:** Solves the core credit underwriting problem in Nigeria's informal economy by generating structured data instead of trying to absorb capital risk.
+4. **Pioneering AI Matching:** Employs active outbound voice matchmaking to optimize job completion rates and locks tasks on the hustler's behalf immediately upon acceptance.
