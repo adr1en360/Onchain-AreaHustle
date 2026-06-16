@@ -88,11 +88,6 @@ def token_wei_to_amount(amount_wei: int, decimals: int = DEFAULT_PAYMENT_DECIMAL
     return amount_wei / 10**decimals
 
 
-# Legacy alias
-naira_to_token_wei = amount_to_token_wei
-token_wei_to_naira = token_wei_to_amount
-
-
 def build_wallet_message(action: str, address: str, nonce: str) -> str:
     return (
         f"AreaHustle wants you to sign in with your Celo wallet.\n\n"

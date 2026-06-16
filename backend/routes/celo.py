@@ -130,7 +130,6 @@ async def wallet_auth(
 
     await db.wallet_challenges.update_one({"_id": challenge["_id"]}, {"$set": {"used": True}})
 
-    # Check if a user with this wallet address and role already exists
     user = await db.users.find_one({"wallet_address": address, "role": body.role})
     if user:
         user_id = str(user["_id"])
@@ -145,7 +144,6 @@ async def wallet_auth(
             "role": user_role,
         }
     else:
-        # Create a new user
         placeholder_email = f"{address[2:10]}_{body.role}@wallet.areahustle.com"
         email_taken = await db.users.find_one({"email": placeholder_email})
         if email_taken:
@@ -176,7 +174,6 @@ async def wallet_auth(
             "is_new": True,
             "role": body.role,
         }
-
 
 
 @router.post("/wallet/register")
@@ -254,7 +251,11 @@ async def wallet_link(
     if not celo.verify_wallet_signature(address, challenge["message"], body.signature):
         raise HTTPException(status_code=400, detail="Invalid signature")
 
-    taken = await db.users.find_one({"wallet_address": address, "role": current_user.get("role"), "_id": {"$ne": current_user["_id"]}})
+    taken = await db.users.find_one({
+        "wallet_address": address,
+        "role": current_user.get("role"),
+        "_id": {"$ne": current_user["_id"]},
+    })
     if taken:
         raise HTTPException(status_code=400, detail="Wallet already linked to another account with this role")
 
@@ -403,6 +404,12 @@ async def confirm_escrow_release(
     if str(task.get("customer_id")) != str(current_user.get("_id")):
         raise HTTPException(status_code=403, detail="Only customer can release escrow")
 
+    if task.get("status") not in ("awaiting_confirmation", "verified"):
+        raise HTTPException(
+            status_code=400,
+            detail=f"Job must be awaiting confirmation before releasing escrow (current: {task.get('status')})",
+        )
+
     escrow_id = task.get("escrow_id")
     if not escrow_id:
         raise HTTPException(status_code=400, detail="Task has no escrow")
@@ -420,10 +427,8 @@ async def confirm_escrow_release(
     if not event:
         raise HTTPException(status_code=400, detail="Escrow release not found in transaction")
 
-    from datetime import datetime
-
     payout_wei = int(event.get("payout", 0))
-    payout_naira = celo.token_wei_to_naira(payout_wei)
+    payout_usdc = payout_wei / 1_000_000.0  # USDC has 6 decimals on Celo Sepolia
     hustler_id = task.get("matched_hustler_id")
 
     await db.tasks.update_one(
@@ -444,11 +449,15 @@ async def confirm_escrow_release(
                 "user_id": hustler_id,
                 "task_id": body.task_id,
                 "type": "payout",
-                "amount": payout_naira,
+                "amount": payout_usdc,
                 "chain_tx": body.tx_hash,
                 "payment_mode": "onchain",
                 "timestamp": datetime.utcnow(),
             }
+        )
+        await db.users.update_one(
+            {"_id": ObjectId(hustler_id)},
+            {"$inc": {"wallet_balance": payout_usdc}},
         )
         await db.hustler_profiles.update_one(
             {"user_id": hustler_id},
@@ -459,6 +468,6 @@ async def confirm_escrow_release(
     return {
         "message": "Payment released on-chain",
         "tx_hash": body.tx_hash,
-        "payout": payout_naira,
+        "payout": payout_usdc,
         "hustler_wallet": event.get("hustler"),
     }

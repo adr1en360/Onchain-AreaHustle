@@ -84,16 +84,10 @@ function ProfilePage() {
   const walletCard = (
     <div className="rounded-3xl bg-card border shadow-soft p-6">
       <div className="text-xs uppercase tracking-widest text-muted-foreground font-semibold mb-3">Payments</div>
-      {canPayOnchain ? (
-        <CeloWalletBadge />
-      ) : celoEnabled ? (
-        <div className="space-y-3">
-          <p className="text-sm text-muted-foreground">Connect your Celo wallet to receive USDC payouts automatically.</p>
-          <WalletConnectButton />
-        </div>
-      ) : (
-        <p className="text-sm text-muted-foreground">Demo wallet mode — link a Celo wallet when contracts are live.</p>
-      )}
+      <div className="space-y-3">
+        <p className="text-sm text-muted-foreground">Connect your Celo wallet to manage USDC payouts automatically.</p>
+        <WalletConnectButton />
+      </div>
       {user?.wallet_address && (
         <p className="text-xs text-muted-foreground mt-3 font-medium text-emerald-700">
           Wallet linked{user.onchain_registered && " · On-chain profile verified"}

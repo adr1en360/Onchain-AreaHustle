@@ -15,8 +15,8 @@ This is alternative credit data that Nigerian credit bureaus (like CRC) and fint
 ## 2. The "Wow Moment"
 The climax of the product is the **AI Agent Outbound Match Call & Auto-Booking**.
 
-1. **The Outbound Call:** The customer speaks a job ("Service my generator in Lekki Phase 1 for eight thousand naira"). Within seconds, the AI Agent dials the top-ranked matched provider on their phone (a premium feature):
-   > *"Hi Emeka, there's a generator servicing job in Lekki Phase 1 for eight thousand naira. Would you like to accept?"*
+1. **The Outbound Call:** The customer speaks a job ("Service my generator in Lekki Phase 1 for eight USDC"). Within seconds, the AI Agent dials the top-ranked matched provider on their phone (a premium feature):
+   > *"Hi Emeka, there's a generator servicing job in Lekki Phase 1 for eight USDC. Would you like to accept?"*
    > *Emeka: "Yes."*
 2. **The Agent Auto-Booking:** The instant Emeka says yes, the AI Agent matches and claims the job on Emeka's behalf in the backend, locking it immediately. The customer's screen updates in real-time to: **Matched with Emeka**. This prevents the next hustler in the queue/line from stealing the opportunity.
 3. **The Proof Card:** Emeka opens his Financial Passport dashboard and clicks "Generate Proof Card", displaying a beautiful visual alternative credit card summarizing his 90-day earnings and consistency indexes with a QR code for lenders.

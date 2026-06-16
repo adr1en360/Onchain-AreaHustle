@@ -261,6 +261,19 @@ function Jobs() {
                       )}
                     </span>
                   </div>
+                  {j.payment_mode === "onchain" && (j.escrow_fund_tx || j.escrow_assign_tx || j.escrow_release_tx) && (
+                    <div className="flex flex-wrap items-center gap-3 mt-3 text-xs">
+                      {j.escrow_fund_tx && (
+                        <a href={`https://sepolia.celoscan.io/tx/${j.escrow_fund_tx}`} target="_blank" rel="noreferrer" className="text-emerald-600 hover:text-emerald-700 transition font-medium">Fund TX</a>
+                      )}
+                      {j.escrow_assign_tx && (
+                        <a href={`https://sepolia.celoscan.io/tx/${j.escrow_assign_tx}`} target="_blank" rel="noreferrer" className="text-emerald-600 hover:text-emerald-700 transition font-medium">Assign TX</a>
+                      )}
+                      {j.escrow_release_tx && (
+                        <a href={`https://sepolia.celoscan.io/tx/${j.escrow_release_tx}`} target="_blank" rel="noreferrer" className="text-emerald-600 hover:text-emerald-700 transition font-medium">Release TX</a>
+                      )}
+                    </div>
+                  )}
                 </div>
                 <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-3 mt-4 sm:mt-0 w-full sm:w-auto">
                   {status === "accepted" || status === "matched" ? (
@@ -322,6 +335,18 @@ function Jobs() {
             </div>
             <div className="bg-muted/30 rounded-2xl p-4 mb-6 text-sm text-foreground leading-relaxed">
               {selectedJob.description || "No detailed description provided by the customer."}
+              {selectedJob.payment_mode === "onchain" && selectedJob.escrow_fund_tx && (
+                <div className="mt-4 pt-4 border-t border-border/50">
+                  <a
+                    href={`https://sepolia.celoscan.io/tx/${selectedJob.escrow_fund_tx}`}
+                    target="_blank"
+                    rel="noreferrer"
+                    className="text-emerald-600 hover:text-emerald-700 transition font-medium text-xs flex items-center gap-1.5"
+                  >
+                    View funding transaction on Celo Sepolia
+                  </a>
+                </div>
+              )}
             </div>
             <div className="flex items-center justify-between border-t pt-4">
               <div>

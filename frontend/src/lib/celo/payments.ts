@@ -25,9 +25,6 @@ export function useUsdcBalance(config?: CeloConfig | null) {
   });
 }
 
-export const useUsdtBalance = useUsdcBalance;
-export const useNgnmBalance = useUsdcBalance;
-
 export function useOnchainPayments() {
   const { config, loading } = useCeloConfig();
   const { address } = useAccount();
@@ -42,5 +39,3 @@ export function useOnchainPayments() {
     canPayOnchain: enabled && linked,
   };
 }
-
-export { formatUsdc, formatUsdt, formatNgnm };

@@ -23,8 +23,6 @@ export function usdcToTokenWei(budget: number): bigint {
   return BigInt(Math.round(budget * 1e6));
 }
 
-/** @deprecated use usdcToTokenWei */
-export const nairaToTokenWei = usdcToTokenWei;
 
 export function shortenAddress(address?: string | null) {
   if (!address) return "";
@@ -37,7 +35,6 @@ export function formatUsdc(wei: bigint | undefined | null) {
   return `${amount.toLocaleString(undefined, { maximumFractionDigits: 2 })} USDC`;
 }
 
-export const formatUsdt = formatUsdc;
 
 export function roleToRegistryEnum(role: string): number {
   return role === "hustler" ? 2 : 1;

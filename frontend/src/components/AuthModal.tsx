@@ -1,10 +1,11 @@
 import React, { useState, useEffect } from "react";
 import { useAuth } from "@/lib/auth-context";
-import { X, Loader2, Wallet, ShieldCheck, User, Users } from "lucide-react";
+import { X, Loader2, Wallet, User, Users } from "lucide-react";
 import { toast } from "sonner";
 import { useNavigate } from "@tanstack/react-router";
 import { useCeloConfig } from "@/components/CeloProvider";
 import { useCeloContracts, useCeloWallet } from "@/lib/celo/hooks";
+import logo from "@/assets/logo.png";
 
 interface AuthModalProps {
   open: boolean;
@@ -79,18 +80,18 @@ export function AuthModal({ open, onClose, initialRole, initialMode }: AuthModal
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-md animate-in fade-in duration-300">
-      {/* Premium Glassmorphism Card */}
-      <div className="relative w-full max-w-md rounded-[32px] bg-gradient-to-b from-card/90 to-card/50 border border-white/10 shadow-2xl p-8 backdrop-blur-xl animate-in zoom-in-95 duration-200">
+      {/* Premium Card */}
+      <div className="relative w-full max-w-md rounded-2xl sm:rounded-[32px] bg-card border border-border shadow-2xl p-6 sm:p-8 animate-in zoom-in-95 duration-200 max-h-[95vh] overflow-y-auto [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none]">
         
         {/* Close Button */}
         <button onClick={onClose} className="absolute right-6 top-6 rounded-full p-1.5 text-muted-foreground hover:text-foreground hover:bg-muted/50 transition">
           <X className="h-5 w-5" />
         </button>
 
-        {/* Header with Celo branding */}
-        <div className="flex flex-col items-center text-center mb-6">
-          <div className="mb-4 flex h-14 w-14 items-center justify-center rounded-2xl bg-emerald-500/10 border border-emerald-500/20 text-emerald-500 animate-pulse">
-            <ShieldCheck className="h-7 w-7" />
+        {/* Header with Logo */}
+        <div className="flex flex-col items-center text-center mb-6 mt-2 sm:mt-0">
+          <div className="mb-4 flex h-14 items-center justify-center">
+            <img src={logo} alt="Onchain AreaHustle Logo" className="h-12 w-auto object-contain" />
           </div>
           <h2 className="font-display text-2xl font-bold tracking-tight">
             {mode === "login" ? "Sign In to AreaHustle" : "Create Onchain Passport"}

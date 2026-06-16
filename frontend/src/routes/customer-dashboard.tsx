@@ -5,9 +5,11 @@ import { useAuth } from "@/lib/auth-context";
 import { api } from "@/lib/api";
 import { usdc } from "@/lib/format";
 import { AnimatedNumber } from "@/components/AnimatedNumber";
-import { Plus, CheckCircle, Clock, MapPin, Phone, Edit, X, Link2 } from "lucide-react";
+import { Plus, CheckCircle, Clock, MapPin, Phone, Edit, X, Link2, RefreshCw } from "lucide-react";
 import { toast } from "sonner";
+import { useAccount } from "wagmi";
 import { useOnchainPayments } from "@/lib/celo/payments";
+import { useUsdcBalance } from "@/lib/celo/useUsdcBalance";
 import { CeloWalletBadge } from "@/components/CeloWalletBadge";
 import { EscrowBadge } from "@/components/EscrowBadge";
 import { useCeloContracts } from "@/lib/celo/hooks";
@@ -19,7 +21,10 @@ export const Route = createFileRoute("/customer-dashboard")({
 function CustomerDashboard() {
   const { isLoggedIn, isLoading: authLoading, userRole, user, updateDemoBalance, addDemoTransaction } = useAuth();
   const { canPayOnchain, config } = useOnchainPayments();
+  const { isConnected: walletConnected, address: walletAddress } = useAccount();
   const { assignHustler, releaseEscrow } = useCeloContracts(config);
+  // Pass no config — hook falls back to hardcoded Celo Sepolia USDC address automatically
+  const { balance: usdcBalance, refetch: refetchUsdc, loading: usdcLoading, error: usdcError } = useUsdcBalance();
   const nav = useNavigate();
   const queryClient = useQueryClient();
   const [topUpOpen, setTopUpOpen] = useState(false);
@@ -44,36 +49,25 @@ function CustomerDashboard() {
   const confirmMutation = useMutation({
     mutationFn: async (id: string) => {
       const job = myJobs.find((j: any) => (j.id || j._id) == id);
-      if (job?.payment_mode === "onchain") {
-        if (job.escrow_status === "funded" && job.matched_hustler_wallet && job.escrow_id) {
-          const assignTx = await assignHustler(job.escrow_id, job.matched_hustler_wallet);
-          await api.confirmEscrowAssign(id, assignTx);
-        }
-        if (job.escrow_status === "assigned" && job.escrow_id) {
-          const releaseTx = await releaseEscrow(job.escrow_id);
-          await api.confirmEscrowRelease(id, releaseTx);
-          return { onchain: true };
-        }
-        throw new Error("On-chain escrow is not ready for release");
+      if (!job) throw new Error("Job not found");
+
+      // Only allowed when job is awaiting confirmation
+      if (job.status !== "awaiting_confirmation") {
+        throw new Error("Job must be awaiting confirmation before releasing payment");
       }
-      return api.completeTask(id);
+
+      if (job.payment_mode === "onchain") {
+        if (!job.escrow_id) throw new Error("No escrow ID found for this job");
+        const releaseTx = await releaseEscrow(job.escrow_id);
+        await api.confirmEscrowRelease(id, releaseTx);
+        return { onchain: true };
+      }
+      // Off-chain: call the confirm endpoint (backend does the payout)
+      return api.confirmTask(id);
     },
     onSuccess: (data, variables) => {
-      toast.success(data?.onchain ? "USDC payment released on Celo!" : "Payment released! Escrow funds transferred to Hustler.");
-
-      const job = myJobs.find((j: any) => (j.id || j._id) == variables);
-      if (job && job.payment_mode !== "onchain") {
-        const amount = Number(job.budget) || 0;
-        updateDemoBalance("customer", -amount);
-        updateDemoBalance("hustler", amount);
-        addDemoTransaction({
-          amount: amount,
-          desc: job.title || job.category || "Job completed",
-          location: job.location || job.neighbourhood || "Local",
-          date: new Date().toLocaleDateString("en-US", { month: "short", day: "numeric", hour: "2-digit", minute: "2-digit" }),
-        });
-      }
-
+      toast.success(data?.onchain ? "USDC payment released on Celo!" : "Payment released!");
+      refetchUsdc();
       queryClient.invalidateQueries({ queryKey: ["customerJobs"] });
     },
     onError: (err: any) => {
@@ -170,9 +164,38 @@ function CustomerDashboard() {
       </div>
 
       <div className="grid md:grid-cols-3 gap-6 mb-10">
-        {canPayOnchain ? (
-          <div className="md:col-span-1">
-            <CeloWalletBadge />
+        {/* Wallet card: show real USDC whenever wallet is connected, demo otherwise */}
+        {walletConnected ? (
+          <div className="rounded-3xl bg-primary text-primary-foreground p-7 shadow-soft flex flex-col justify-between min-h-[160px]">
+            <div>
+              <div className="flex items-center justify-between">
+                <div className="text-xs opacity-70 uppercase tracking-widest">Wallet USDC Balance</div>
+                <button
+                  onClick={() => refetchUsdc()}
+                  title="Refresh balance"
+                  className="opacity-60 hover:opacity-100 transition"
+                >
+                  <RefreshCw className={`h-3.5 w-3.5 ${usdcLoading ? "animate-spin" : ""}`} />
+                </button>
+              </div>
+              <div className="font-display text-4xl font-bold mt-2 tabular-nums">
+                {usdcLoading ? (
+                  <span className="opacity-60">&hellip;</span>
+                ) : (
+                  <AnimatedNumber value={usdcBalance} />
+                )}{" "}
+                <span className="text-xl">USDC</span>
+              </div>
+              {usdcError && (
+                <div className="text-[10px] opacity-70 mt-1 text-rose-200">
+                  Read error — check wallet &amp; network
+                </div>
+              )}
+              <div className="text-xs opacity-60 mt-1 truncate">
+                {walletAddress}
+              </div>
+              <div className="text-[10px] opacity-50 mt-0.5">On-chain · Celo Sepolia</div>
+            </div>
           </div>
         ) : (
           <div className="rounded-3xl bg-primary text-primary-foreground p-7 shadow-soft flex flex-col justify-between">
@@ -231,10 +254,10 @@ function CustomerDashboard() {
                 <div>
                   <div className="flex items-center gap-2 mb-1">
                     <span
-                      className={`text-[10px] font-semibold uppercase tracking-widest px-2 py-0.5 rounded-full ${status === "open" || status === "pending" ? "bg-muted text-muted-foreground" : status === "matched" || status === "accepted" || status === "in_progress" || status === "active" ? "bg-primary/10 text-primary" : status === "awaiting_confirmation" ? "bg-orange-500/10 text-orange-600" : "bg-success/10 text-success"}`}
+                      className={`text-[10px] font-semibold uppercase tracking-widest px-2 py-0.5 rounded-full ${status === "open" || status === "pending" ? "bg-muted text-muted-foreground" : status === "matched" || status === "accepted" || status === "in_progress" || status === "active" ? "bg-primary/10 text-primary" : status === "awaiting_confirmation" ? "bg-orange-500/10 text-orange-600" : status === "verified" ? "bg-emerald-500/10 text-emerald-700" : "bg-success/10 text-success"}`}
                     >
                       {status === "awaiting_confirmation"
-                        ? "marked as done"
+                        ? "awaiting confirmation"
                         : status === "in_progress" || status === "active"
                           ? "in progress"
                           : status === "done" || status === "completed"
@@ -312,7 +335,8 @@ function CustomerDashboard() {
                         disabled={confirmMutation.isPending}
                         className="w-full sm:w-auto justify-center rounded-full bg-[#183620] text-white px-5 py-2.5 text-sm font-semibold hover:opacity-90 transition flex items-center gap-2 shadow-soft animate-pulse"
                       >
-                        <CheckCircle className="h-4 w-4" /> {job.payment_mode === "onchain" ? "Release USDC on Celo" : "Release Payment"}
+                        <CheckCircle className="h-4 w-4" />
+                        {job.payment_mode === "onchain" ? "Release USDC on Celo" : "Release Payment"}
                       </button>
                     </div>
                   )}
@@ -425,8 +449,14 @@ function CustomerDashboard() {
                   value={editingJob.budget}
                   onChange={(e) => setEditingJob({ ...editingJob, budget: Number(e.target.value) })}
                   required
-                  className="mt-1 w-full rounded-xl border bg-muted/30 px-4 py-3 text-sm outline-none focus:border-primary"
+                  disabled={editingJob.payment_mode === "onchain"}
+                  className="mt-1 w-full rounded-xl border bg-muted/30 px-4 py-3 text-sm outline-none focus:border-primary disabled:opacity-50 disabled:cursor-not-allowed"
                 />
+                {editingJob.payment_mode === "onchain" && (
+                  <p className="text-[10px] text-amber-600 mt-1 italic">
+                    Budget cannot be changed because USDC is already locked in an on-chain escrow.
+                  </p>
+                )}
               </div>
               <button
                 type="submit"

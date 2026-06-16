@@ -110,9 +110,9 @@ async def get_proof_card(
     is_demo_emeka = current_user.get("email") == "hustler@areahustle.com" or profile.get("trust_score", 0) >= 800
 
     if is_demo_emeka:
-        verified_income_30d = 45000.0
-        verified_income_60d = 82000.0
-        verified_income_90d = 135000.0
+        verified_income_30d = 45.0
+        verified_income_60d = 82.0
+        verified_income_90d = 135.0
         consistency_index = 0.72
         tenure = 8
         avg_response = 4.2

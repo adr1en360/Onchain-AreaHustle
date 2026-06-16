@@ -74,7 +74,7 @@ async def create_task(
     response = {"id": task_id, "payment_mode": payment_mode}
     if payment_mode == "onchain":
         task_ref = celo.task_ref_from_id(task_id)
-        amount_wei = celo.naira_to_token_wei(task.budget)
+        amount_wei = int(float(task.budget) * 1_000_000) # USDC has 6 decimals on Celo
         await db.tasks.update_one(
             {"_id": ObjectId(task_id)},
             {
@@ -161,6 +161,14 @@ async def update_task(
         raise HTTPException(status_code=400, detail="Only open or pending tasks can be edited")
 
     update_data = task_update.dict(exclude_unset=True)
+    
+    if task.get("payment_mode") == "onchain" and "budget" in update_data:
+        if float(update_data["budget"]) != float(task.get("budget", 0)):
+            raise HTTPException(
+                status_code=400,
+                detail="Budget cannot be changed for on-chain jobs because USDC is already locked in escrow."
+            )
+
     if "location" in update_data and not update_data.get("neighbourhood"):
         update_data["neighbourhood"] = update_data["location"]
     elif "neighbourhood" in update_data and not update_data.get("location"):
@@ -179,12 +187,15 @@ async def update_task(
 
 @router.get("/my-tasks")
 async def my_tasks(
+    status_filter: Optional[str] = Query(None, alias="status"),
     db: AsyncIOMotorDatabase = Depends(get_database),
     current_user: dict = Depends(get_current_user),
 ):
     user_id = str(current_user.get("_id"))
     role = current_user.get("role")
-    query = {"customer_id": user_id} if role == "customer" else {"matched_hustler_id": user_id}
+    query: dict = {"customer_id": user_id} if role == "customer" else {"matched_hustler_id": user_id}
+    if status_filter:
+        query["status"] = status_filter
     cursor = db.tasks.find(query).sort("created_at", -1)
     tasks = []
     async for doc in cursor:
@@ -266,22 +277,63 @@ async def complete_task(
 
     from datetime import datetime
 
+    # For onchain jobs: escrow must be assigned before hustler can mark done
     if task.get("payment_mode") == "onchain":
         if task.get("escrow_status") != "assigned":
             raise HTTPException(
                 status_code=400,
                 detail="On-chain escrow must be assigned to hustler before marking the job done.",
             )
-        await db.tasks.update_one(
-            {"_id": ObjectId(task_id)},
-            {"$set": {"status": "awaiting_confirmation"}},
+
+    # ALL modes: set awaiting_confirmation — customer must verify and release
+    await db.tasks.update_one(
+        {"_id": ObjectId(task_id)},
+        {
+            "$set": {
+                "status": "awaiting_confirmation",
+                "hustler_completed_at": datetime.utcnow(),
+            }
+        },
+    )
+
+    return {
+        "message": "Job marked done — awaiting customer confirmation",
+        "task_id": task_id,
+        "requires_admin_verification": False,
+        "payment_mode": task.get("payment_mode"),
+    }
+    
+@router.post("/{task_id}/confirm")
+async def confirm_task(
+    task_id: str,
+    db: AsyncIOMotorDatabase = Depends(get_database),
+    current_user: dict = Depends(get_current_user),
+):
+    if current_user.get("role") != "customer":
+        raise HTTPException(status_code=403, detail="Only customers can confirm tasks")
+
+    task = await db.tasks.find_one({"_id": ObjectId(task_id)})
+    if not task:
+        raise HTTPException(status_code=404, detail="Task not found")
+
+    if str(task.get("customer_id")) != str(current_user.get("_id")):
+        raise HTTPException(status_code=403, detail="Only task owner can confirm")
+
+    # Must be awaiting_confirmation before customer can release
+    if task.get("status") != "awaiting_confirmation":
+        raise HTTPException(
+            status_code=400,
+            detail=f"Job must be awaiting confirmation before releasing payment (current: {task.get('status')})",
         )
-        return {
-            "message": "Job marked done — awaiting customer payment release",
-            "task_id": task_id,
-            "requires_escrow_release": True,
-            "escrow_id": task.get("escrow_id"),
-        }
+
+    # On-chain jobs are released via /celo/escrow/confirm-release, not here
+    if task.get("payment_mode") == "onchain":
+        raise HTTPException(
+            status_code=400,
+            detail="Use the on-chain release flow for USDC jobs",
+        )
+
+    from datetime import datetime
 
     await db.tasks.update_one(
         {"_id": ObjectId(task_id)},
@@ -289,7 +341,7 @@ async def complete_task(
     )
 
     hustler_id = task.get("matched_hustler_id")
-    if hustler_id and task.get("payment_mode") != "onchain":
+    if hustler_id:
         payout = float(task.get("budget", 0))
         await db.transactions.insert_one(
             {
@@ -308,10 +360,8 @@ async def complete_task(
         )
 
     return {
-        "message": "Task completed",
+        "message": "Task confirmed and payment released",
         "task_id": task_id,
-        "requires_escrow_release": task.get("payment_mode") == "onchain" and task.get("escrow_status") == "assigned",
-        "escrow_id": task.get("escrow_id"),
     }
 
 

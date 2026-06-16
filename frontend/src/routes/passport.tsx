@@ -5,6 +5,8 @@ import { useAuth } from "@/lib/auth-context";
 import { api } from "@/lib/api";
 import { usdc } from "@/lib/format";
 import { AnimatedNumber } from "@/components/AnimatedNumber";
+import { useAccount } from "wagmi";
+import { useUsdcBalance } from "@/lib/celo/useUsdcBalance";
 import {
   ShieldCheck,
   Wallet,
@@ -76,6 +78,10 @@ function PassportPage() {
   const { isLoggedIn, userRole, user } = useAuth();
   const nav = useNavigate();
   const [voiceExpanded, setVoiceExpanded] = useState(false);
+  // Use wallet connection directly — don't depend on backend config.enabled
+  const { isConnected: walletConnected } = useAccount();
+  // No config arg → falls back to hardcoded Celo Sepolia USDC address
+  const { balance: usdcOnchain, loading: usdcLoading } = useUsdcBalance();
 
   const { data: passport } = useQuery({
     queryKey: ["passport"],
@@ -113,8 +119,19 @@ function PassportPage() {
           <h1 className="font-display text-xl sm:text-2xl font-bold text-[#0D3B2E]">Financial Passport</h1>
           <div className="flex items-center gap-3 sm:gap-4">
             <div className="text-right">
-              <div className="text-[10px] text-muted-foreground uppercase tracking-widest font-semibold">Total Wallet Balance</div>
-              <div className="font-display font-bold text-base sm:text-lg text-[#0D3B2E]">{usdc(user?.wallet_balance || 0)}</div>
+              <div className="text-[10px] text-muted-foreground uppercase tracking-widest font-semibold">
+                {walletConnected ? "On-chain USDC" : "Wallet Balance"}
+              </div>
+              <div className="font-display font-bold text-base sm:text-lg text-[#0D3B2E]">
+                {walletConnected
+                  ? usdcLoading
+                    ? "..."
+                    : `${usdcOnchain.toFixed(2)} USDC`
+                  : usdc(user?.wallet_balance || 0)}
+              </div>
+              {walletConnected && (
+                <div className="text-[10px] text-muted-foreground">On-chain · Celo Sepolia</div>
+              )}
             </div>
             <div className="h-10 w-10 rounded-full bg-[#0D3B2E] text-white flex items-center justify-center font-bold shadow-soft">EA</div>
           </div>

@@ -7,14 +7,16 @@ describe("TaskEscrow", function () {
     const [owner, customer, hustler] = await ethers.getSigners();
 
     const MockToken = await ethers.getContractFactory("MockERC20");
-    const token = await MockToken.deploy("NGNm", "NGNm", 18);
+    // Deploy as Mock USDC with 6 decimals — matching Celo Sepolia USDC
+    const token = await MockToken.deploy("Mock USDC", "USDC", 6);
     await token.waitForDeployment();
 
     const Escrow = await ethers.getContractFactory("TaskEscrow");
     const escrow = await Escrow.deploy(await token.getAddress(), owner.address, 250);
     await escrow.waitForDeployment();
 
-    await token.mint(customer.address, ethers.parseEther("10000"));
+    // Mint 10,000 USDC (6 decimals)
+    await token.mint(customer.address, ethers.parseUnits("10000", 6));
     await token.connect(customer).approve(await escrow.getAddress(), ethers.MaxUint256);
 
     return { owner, customer, hustler, token, escrow };
@@ -22,7 +24,8 @@ describe("TaskEscrow", function () {
 
   it("creates escrow and releases payment to hustler", async function () {
     const { customer, hustler, token, escrow } = await loadFixture(deployFixture);
-    const amount = ethers.parseEther("5000");
+    // 5,000 USDC (6 decimals)
+    const amount = ethers.parseUnits("5000", 6);
     const taskRef = ethers.id("task-123");
 
     await expect(escrow.connect(customer).createEscrow(taskRef, amount))
@@ -43,12 +46,14 @@ describe("TaskEscrow", function () {
 
   it("cancels funded escrow and refunds customer", async function () {
     const { customer, token, escrow } = await loadFixture(deployFixture);
-    const amount = ethers.parseEther("3000");
+    // 3,000 USDC (6 decimals)
+    const amount = ethers.parseUnits("3000", 6);
     const taskRef = ethers.id("task-cancel");
 
     await escrow.connect(customer).createEscrow(taskRef, amount);
     await escrow.connect(customer).cancelEscrow(1);
 
-    expect(await token.balanceOf(customer.address)).to.equal(ethers.parseEther("10000"));
+    // Customer should get back their full 10,000 USDC
+    expect(await token.balanceOf(customer.address)).to.equal(ethers.parseUnits("10000", 6));
   });
 });

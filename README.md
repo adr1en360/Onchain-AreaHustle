@@ -22,7 +22,6 @@ AreaHustle is a voice-first hyper-local gig marketplace that turns everyday info
 - **Voice AI Platform:** [Aethex API](https://developers.aethexai.com/)
 - **Large Language Model:** [Google Gemini Flash](https://ai.google.dev/)
 - **On-chain (Celo Sepolia):** USDC escrow via `TaskEscrow`, optional wallet sign-up via `AreaHustleRegistry`, wagmi + viem frontend
-- **Token Conversion Utilities:** Uniswap V3 swaps from NGNm to USDC natively on Celo.
 
 ---
 
@@ -36,13 +35,7 @@ AreaHustle leverages Celo's mobile-first, low-cost network to handle micro-gigs 
 | TaskEscrow | `0x61D4fd78A858D0A74397fAe8F89b0bb7A2576e65` |
 | USDC token | `0x01C5C0122039549AD1493B8220cABEdD739BC44E` |
 
-### 🔄 Multi-Stablecoin Support & Swaps
-To support everyday real-world payments, AreaHustle features direct stablecoin utility. Users lock their **USDC** in escrow. For local/global currency flexibility, the project includes an onchain conversion script to swap **NGNm** to **USDC** on Celo via Uniswap V3:
-- **Celo Sepolia NGNm:** `0x3d5ae86F34E2a82771496D140daFAEf3789dF888`
-- **Celo Sepolia USDC:** `0x01C5C0122039549AD1493B8220cABEdD739BC44E`
-- See [register-8004/swap.ts](file:///c:/Users/alara/OneDrive/Desktop/Onchain-AreaHustle/register-8004/swap.ts) for execution details.
-
-**User Flow:** Connect Celo Wallet → Post task (USDC escrow auto-locks) → Hustler accepts via AI Outbound Voice Agent → Gig booked & assigned onchain → Task marked complete → Payment released → Optional swap of NGNm earnings to USDC.
+**User Flow:** Connect Celo Wallet → Post task (USDC escrow auto-locks) → Hustler accepts via AI Outbound Voice Agent → Gig booked & assigned onchain → Task marked complete → Payment released in USDC.
 
 
 ---

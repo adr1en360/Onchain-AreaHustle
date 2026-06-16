@@ -3,7 +3,7 @@ from fastapi.middleware.cors import CORSMiddleware
 from fastapi.openapi.docs import get_redoc_html, get_swagger_ui_html, get_swagger_ui_oauth2_redirect_html
 from fastapi.staticfiles import StaticFiles
 import os
-from routes import auth, tasks, users, passport, transactions, celo, directory, concierge, self_agent
+from routes import auth, tasks, users, passport, transactions, celo, directory, concierge, self_agent, admin
 from database import init_db
 
 app = FastAPI(
@@ -67,6 +67,7 @@ app.include_router(celo.router, prefix="/api/v1/celo", tags=["Celo"])
 app.include_router(directory.router, prefix="/api/v1/directory", tags=["Directory"])
 app.include_router(concierge.router, prefix="/api/v1/concierge", tags=["Concierge"])
 app.include_router(self_agent.router, prefix="/api/v1/self", tags=["Self Agent ID"])
+app.include_router(admin.router, prefix="/api/v1/admin", tags=["Admin"])
 
 @app.get("/")
 async def root():

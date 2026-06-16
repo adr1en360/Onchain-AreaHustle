@@ -20,12 +20,12 @@ Hustlers use their completed jobs as formal creditworthiness proof to secure loa
 ## 2. The Three Core Pillars
 
 ### 🎙️ Pillar 1: Voice-to-Intent Task Posting
-Middle-class estate residents and small businesses can post tasks hands-free. A user taps "Speak Task" and describes what they need in plain spoken language (e.g., *"I need someone to service my generator in Lekki Phase 1 for eight thousand naira"*). 
+Middle-class estate residents and small businesses can post tasks hands-free. A user taps "Speak Task" and describes what they need in plain spoken language (e.g., *"I need someone to service my generator in Lekki Phase 1 for eight USDC"*). 
 * **The AI Tech:** The audio is transcribed via **Aethex Speech-to-Text**, and passed to **Google Gemini Flash**. Using a structured Pydantic schema, Gemini instantly extracts the `category`, `neighbourhood`, `budget`, and `description` to populate a clean, reviewable task card.
 
 ### 📞 Pillar 2: AI Agent Outbound Calling & Auto-Booking
 Instead of relying on push notifications—which get buried by aggressive battery saving modes on entry-level Android devices—AreaHustle actively calls matched local service providers.
-* **The AI Tech & Queue Lock:** Once a task is posted, the backend ranks local eligible providers. The **Aethex Outbound Agent** calls the top-ranked premium provider on their phone: *"Hi Emeka, there's a generator servicing job in Lekki Phase 1 for eight thousand Naira. Do you accept?"*
+* **The AI Tech & Queue Lock:** Once a task is posted, the backend ranks local eligible providers. The **Aethex Outbound Agent** calls the top-ranked premium provider on their phone: *"Hi Emeka, there's a generator servicing job in Lekki Phase 1 for eight USDC. Do you accept?"*
 * **On Acceptance:** When Emeka responds with "Yes" via voice, the AI Agent immediately books the job on Emeka's behalf in the backend, locking it instantly to prevent other hustlers in the queue/line from taking it.
 
 ### 💳 Pillar 3: Financial Passport & Creditworthiness Card
@@ -46,7 +46,7 @@ AreaHustle does not compute a credit score; instead, it outputs a bureau-ready *
 
 ## 4. Celo Onchain Security & Settlement
 AreaHustle leverages Celo to ensure payment trust and identity security in the informal economy:
-* **NGNm Stablecoin Escrow:** Tasks are funded using NGNm (Naira stablecoin) locked in the `TaskEscrow` smart contract. Payouts are held in escrow and released trustlessly once a job is complete.
+* **USDC Stablecoin Escrow:** Tasks are funded using USDC locked in the `TaskEscrow` smart contract. Payouts are held in escrow and released trustlessly once a job is complete.
 * **Onchain Identity Registry:** Hustlers link their wallets and work histories onchain via `AreaHustleRegistry`, securing their identity on a decentralized, public ledger.
 * **Low-Cost Micropayments:** Celo's sub-cent gas fees and mobile-first ecosystem are ideal for entry-level devices and micro-gigs, ensuring earnings go directly to the worker.
 

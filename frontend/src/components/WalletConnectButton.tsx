@@ -85,8 +85,6 @@ export function WalletConnectButton({ compact }: Props) {
     }
   };
 
-  if (!config.enabled) return null;
-
   if (isLinked && isConnected) {
     return compact ? (
       <CeloWalletBadge compact showBalance />

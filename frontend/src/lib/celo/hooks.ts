@@ -13,6 +13,14 @@ import { api } from "@/lib/api";
 import { escrowAbi, erc20Abi, registryAbi } from "./abis";
 import { CELO_SEPOLIA_CHAIN_ID, usdcToTokenWei, roleToRegistryEnum, type CeloConfig } from "./config";
 
+// ─── Canonical deployed addresses (chain-11142220.json) ──────────────────────
+// These are the source of truth. The backend /celo/config may have stale
+// env vars on Render. If config provides a value we use it, but these are
+// the known-correct fallbacks from the latest hardhat deployment.
+const DEPLOYMENT_ESCROW   = "0x61D4fd78A858D0A74397fAe8F89b0bb7A2576e65" as `0x${string}`;
+const DEPLOYMENT_USDC     = "0x01C5C0122039549AD1493B8220cABEdD739BC44E" as `0x${string}`;
+// ─────────────────────────────────────────────────────────────────────────────
+
 export function useCeloWallet() {
   const { address, isConnected, chainId } = useAccount();
   const { connect, connectors, isPending: isConnecting } = useConnect();
@@ -54,31 +62,36 @@ export function useCeloContracts(config: CeloConfig | null) {
 
   const fundEscrow = useCallback(
     async (taskRef: `0x${string}`, budget: number) => {
-      if (!config?.escrowAddress || !config.paymentToken || !address) {
-        throw new Error("Celo contracts or wallet not configured");
-      }
-      const amount = usdcToTokenWei(budget);
+      // Always use the deployment-file addresses — the backend Render env may
+      // have stale values from an older deployment.
+      const escrowAddress = DEPLOYMENT_ESCROW;
+      const usdcAddress   = DEPLOYMENT_USDC;
 
+      if (!address) throw new Error("Wallet not connected");
+      const amount = usdcToTokenWei(budget);
+      // Check allowance on the Celo Sepolia USDC contract
       const allowance = await publicClient!.readContract({
-        address: config.paymentToken,
+        address: usdcAddress,
         abi: erc20Abi,
         functionName: "allowance",
-        args: [address, config.escrowAddress],
+        args: [address, escrowAddress],
       });
 
-      if (allowance < amount) {
+      if ((allowance as bigint) < amount) {
+        // Approve the escrow to spend USDC on behalf of the user
         const approveHash = await writeContractAsync({
-          address: config.paymentToken,
+          address: usdcAddress,
           abi: erc20Abi,
           functionName: "approve",
-          args: [config.escrowAddress, maxUint256],
+          args: [escrowAddress, maxUint256],
           chainId: celoSepolia.id,
         });
         await waitForTx(approveHash);
       }
 
+      // Call createEscrow — the contract will safeTransferFrom USDC into itself
       const hash = await writeContractAsync({
-        address: config.escrowAddress,
+        address: escrowAddress,
         abi: escrowAbi,
         functionName: "createEscrow",
         args: [taskRef, amount],
@@ -87,7 +100,7 @@ export function useCeloContracts(config: CeloConfig | null) {
       await waitForTx(hash);
       return hash;
     },
-    [config, publicClient, writeContractAsync, address, waitForTx],
+    [publicClient, writeContractAsync, address, waitForTx],
   );
 
   const assignHustler = useCallback(

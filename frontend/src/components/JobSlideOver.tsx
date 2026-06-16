@@ -1,7 +1,8 @@
 import { useEffect, useState } from "react";
 import { useNavigate } from "@tanstack/react-router";
 import { useAuth } from "@/lib/auth-context";
-import { naira } from "@/lib/format";
+import { usdc } from "@/lib/format";
+
 import {
   X,
   MapPin,
@@ -113,7 +114,8 @@ export function JobSlideOver({
           {/* Budget */}
           <div className="mt-5 rounded-2xl bg-primary text-primary-foreground p-5">
             <div className="text-xs opacity-70 uppercase tracking-widest">Job Budget</div>
-            <div className="font-display text-4xl font-bold mt-1">{naira(job.budget)}</div>
+            <div className="font-display text-4xl font-bold mt-1">{usdc(job.budget)}</div>
+
             <div className="mt-3 inline-flex items-center gap-1.5 text-xs opacity-80">
               <Shield className="h-3.5 w-3.5" /> Held in USDC escrow on Celo
             </div>
@@ -124,10 +126,11 @@ export function JobSlideOver({
             <div className="text-xs uppercase tracking-widest text-muted-foreground mb-3 font-semibold">
               Estimated payout breakdown
             </div>
-            <Row label="Job completion" value={`+${naira(job.budget)}`} />
-            <Row label="Escrow sweep · Loan (20%)" value={`-${naira(sweep)}`} muted />
+            <Row label="Job completion" value={`+${usdc(job.budget)}`} />
+            <Row label="Escrow sweep · Loan (20%)" value={`-${usdc(sweep)}`} muted />
             <div className="border-t my-2" />
-            <Row label="To your wallet" value={`+${naira(net)}`} accent />
+            <Row label="To your wallet" value={`+${usdc(net)}`} accent />
+
           </div>
 
           <p className="mt-5 text-xs text-muted-foreground leading-relaxed">

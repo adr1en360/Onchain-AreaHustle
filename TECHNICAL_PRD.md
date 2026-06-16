@@ -120,6 +120,7 @@ Key routes required for the hackathon sprint:
 - `POST /api/v1/tasks/voice-extract` — Audio / transcript intent extraction
 - `POST /api/v1/tasks/{id}/match` — Hustler manual or voice acceptance
 - `POST /api/v1/tasks/{id}/complete` — Complete task & release escrow
+- `POST /api/v1/tasks/{id}/confirm` — Customer confirms job and releases payment to hustler
 - `POST /api/v1/tasks/notify-hustlers/{task_id}` — Trigger Outbound Voice Matching Queue
 - `POST /api/v1/tasks/call-hustler` — Outbound AI agent call generator
 - `GET /api/v1/passport/me` — Retrieve Financial Passport metrics
